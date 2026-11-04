@@ -8,8 +8,9 @@
 
 ### Phase 1: Engine Foundation & Setup
 - [x] Repository initialization, documentation, and directory structure setup (Bekzat)
-- [ ] Visual Studio project configuration with GLFW, GLAD, GLM, stb_image (Bekzat)
-- [ ] Basic window creation, render loop, and FPS camera controller (Bekzat & Asylbek)
+- [x] TASK-001: OpenGL 3.3 Core Window (1280x720) and render loop abstraction (`Window.h`/`Window.cpp`) (Bekzat)
+- [ ] Visual Studio / CMake build configuration verified across environments (Bekzat)
+- [ ] Camera controller (FPS camera yaw/pitch/strafe) (Bekzat & Asylbek)
 - [ ] Shader loading and compilation abstraction (Bekzat)
 
 ### Phase 2: Core Environment Elements

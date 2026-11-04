@@ -11,9 +11,9 @@ This document defines the exact environment, dependencies, and compilation setup
 ## 2. Libraries & Dependencies
 | Component | Library | Purpose | Source / Linkage |
 |---|---|---|---|
-| **Window & Input** | GLFW (3.3+) | Window creation, context management, mouse/keyboard input | Static / dynamic library |
-| **OpenGL Loader** | GLAD (OpenGL 3.3 Core) | Loading OpenGL function pointers | Source (`glad.c` + headers) |
-| **Math Library** | GLM (OpenGL Mathematics) | Vector/matrix operations, camera projection, transformations | Header-only |
+| **Window & Input** | GLFW 3.3+ | Window creation, context management, mouse/keyboard input | Dynamic library (vcpkg / system) |
+| **OpenGL Loader** | GLEW 2.2+ (or GLAD) | Loading OpenGL 3.3 Core function pointers | Pre-configured in course setup (`GLEW::GLEW`) |
+| **Mathematics** | GLM 0.9.9+ | Vector/matrix operations, camera projection, transformations | Header-only (`glm::glm`) |
 | **Image Loading** | stb_image | Loading textures and heightmaps (PNG, JPG) | Header-only (`stb_image.h`) |
 
 ## 3. Shaders
