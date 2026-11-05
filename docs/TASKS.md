@@ -9,9 +9,9 @@
 ### Phase 1: Engine Foundation & Setup
 - [x] Repository initialization, documentation, and directory structure setup (Bekzat)
 - [x] TASK-001: OpenGL 3.3 Core Window (1280x720) and render loop abstraction (`Window.h`/`Window.cpp`) (Bekzat)
+- [x] TASK-002: Reusable shader loading, compilation, and uniform management system (`Shader.h`/`Shader.cpp`) (Asylbek)
 - [ ] Visual Studio / CMake build configuration verified across environments (Bekzat)
 - [ ] Camera controller (FPS camera yaw/pitch/strafe) (Bekzat & Asylbek)
-- [ ] Shader loading and compilation abstraction (Bekzat)
 
 ### Phase 2: Core Environment Elements
 - [ ] Mountain terrain generation (heightmap / procedural mesh with VAO/VBO/EBO) (Bekzat)

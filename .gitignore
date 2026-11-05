@@ -30,6 +30,8 @@ Makefile
 *.a
 *.pdb
 *.ilk
+*.o
+mountain-lake-aurora
 
 # OS generated
 .DS_Store

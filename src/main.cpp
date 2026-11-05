@@ -1,4 +1,5 @@
 #include "Window/Window.h"
+#include "Shader/Shader.h"
 #include <iostream>
 
 void processInput(GLFWwindow* window) {
@@ -20,6 +21,15 @@ int main() {
 
     std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
     std::cout << "Renderer: " << glGetString(GL_RENDERER) << std::endl;
+
+    // TASK-002: Load and test basic shader
+    Shader basicShader("shaders/basic.vert", "shaders/basic.frag");
+    if (!basicShader.isValid()) {
+        std::cerr << "Failed to initialize basic shader!" << std::endl;
+    } else {
+        basicShader.use();
+        basicShader.setVec4("uColor", glm::vec4(0.2f, 0.6f, 0.9f, 1.0f));
+    }
 
     // Deep night blue clear color (base for mountain lake night scene)
     const float clearR = 0.02f;
