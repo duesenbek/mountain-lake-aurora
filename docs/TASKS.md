@@ -1,31 +1,31 @@
 # Project Tasks & Responsibilities
 
 ## Team Members
-- **Bekzat Duisenbek** (Lead / Architecture / Terrain & Water)
-- **Asylbek** (Lighting, Aurora Effects & Skybox)
+- **Bekzat Duisenbek** (SE-2417) - Lead / Architecture / Terrain, Lake & Camera
+- **Asylbek Agabekuly** (SE-2422) - Aurora, Skybox, Lighting & Environment
 
 ## Work Breakdown
 
 ### Phase 1: Engine Foundation & Setup
-- [x] Repository initialization, documentation, and directory structure setup (Bekzat)
 - [x] TASK-001: OpenGL 3.3 Core Window (1280x720) and render loop abstraction (`Window.h`/`Window.cpp`) (Bekzat)
 - [x] TASK-002: Reusable shader loading, compilation, and uniform management system (`Shader.h`/`Shader.cpp`) (Asylbek)
-- [ ] Visual Studio / CMake build configuration verified across environments (Bekzat)
-- [ ] Camera controller (FPS camera yaw/pitch/strafe) (Bekzat & Asylbek)
+- [x] TASK-003: Basic 3D Mesh & Geometry System (`Mesh.h`/`Mesh.cpp` with VAO, VBO, EBO, Cube and Plane generation) (Bekzat)
+- [ ] TASK-004: Interactive 3D Camera (WASD movement, mouse look, view/projection matrices) (Bekzat)
 
 ### Phase 2: Core Environment Elements
-- [ ] Mountain terrain generation (heightmap / procedural mesh with VAO/VBO/EBO) (Bekzat)
-- [ ] Terrain texturing and multi-layer blending (rock, snow, grass) (Bekzat)
-- [ ] Skybox / Night sky dome integration (Asylbek)
-- [ ] Directional moonlight and ambient night lighting (Blinn-Phong) (Asylbek)
+- [ ] TASK-005: Mountain terrain generation (heightmap / procedural mesh with VAO/VBO/EBO) (Bekzat)
+- [ ] TASK-006: Mountain environment texturing and multi-layer blending (rock, snow) (Bekzat)
+- [ ] TASK-007: Lake geometry & reflective surface (Bekzat)
+- [ ] TASK-008: Starry skybox integration (Asylbek)
+- [ ] TASK-009: Directional moonlight and ambient night lighting (Blinn-Phong) (Asylbek)
 
 ### Phase 3: Water Surface & Aurora Effects
-- [ ] Water plane rendering with Fresnel reflection/refraction approximation (Bekzat)
-- [ ] Dynamic wave animation on water (vertex displacement or normal mapping) (Bekzat)
-- [ ] Aurora Borealis procedural shader (raymarching or multi-layered noise ribbon) (Asylbek)
-- [ ] Water reflection of the Aurora and terrain (Bekzat & Asylbek)
+- [ ] TASK-010: Dynamic wave animation on water (Bekzat)
+- [ ] TASK-011: Aurora Borealis procedural shader (raymarching or ribbon geometry) (Asylbek)
+- [ ] TASK-012: Campfire point light & particle effect (Asylbek)
+- [ ] TASK-013: Water reflection of the Aurora and terrain (Bekzat & Asylbek)
 
 ### Phase 4: Polish, Optimization & Reporting
-- [ ] Performance profiling and resource cleanup (Both)
-- [ ] Final video recording and screenshots for report (Both)
-- [ ] Final project report drafting according to university rubric (Both)
+- [ ] TASK-014: Performance profiling and resource cleanup (Both)
+- [ ] TASK-015: Demonstration video and screenshots for final submission (Both)
+- [ ] TASK-016: Final project report drafting according to university rubric (Both)

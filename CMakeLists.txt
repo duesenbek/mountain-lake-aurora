@@ -32,6 +32,8 @@ set(SOURCES
     src/Window/Window.h
     src/Shader/Shader.cpp
     src/Shader/Shader.h
+    src/Mesh/Mesh.cpp
+    src/Mesh/Mesh.h
 )
 
 add_executable(mountain-lake-aurora ${SOURCES})
