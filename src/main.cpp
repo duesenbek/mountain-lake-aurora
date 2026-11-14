@@ -14,7 +14,7 @@
 #include <algorithm>
 
 // Camera instance positioned at the lake shore looking up at the alpine peaks
-Camera camera(glm::vec3(0.0f, 3.8f, 24.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 7.0f);
+Camera camera(glm::vec3(0.0f, 3.0f, 25.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 5.0f);
 
 // Mouse cursor tracking
 float lastX = 1280.0f / 2.0f;
@@ -119,12 +119,12 @@ int main() {
     std::cout << "  [Scroll Wheel] - Zoom (FOV)" << std::endl;
     std::cout << "  [ESC] - Exit application\n" << std::endl;
 
-    // TASK-005/006: Initialize majestic alpine mountain valley (180x180 area, 65.0m height)
+    // TASK-005/006: Initialize majestic alpine mountain valley (180x180 area, 48.0m height)
     const std::string heightmapFile = "assets/heightmaps/mountain_valley.png";
     ensureHeightmapAsset(heightmapFile);
 
     Terrain terrain;
-    terrain.loadFromHeightmap(heightmapFile, 180.0f, 180.0f, 65.0f);
+    terrain.loadFromHeightmap(heightmapFile, 180.0f, 180.0f, 48.0f);
 
     // Load Terrain Shaders
     Shader terrainShader("shaders/terrain.vert", "shaders/terrain.frag");
@@ -146,7 +146,7 @@ int main() {
     terrainShader.setFloat("uTextureScale", 32.0f);
 
     // Lake placeholder plane in the valley center
-    Mesh lakePlaceholder = Mesh::createPlane(38.0f, 34.0f, 1, 1);
+    Mesh lakePlaceholder = Mesh::createPlane(42.0f, 38.0f, 1, 1);
     Shader basicShader("shaders/basic.vert", "shaders/basic.frag");
 
     // Deep night blue clear color

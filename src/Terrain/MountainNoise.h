@@ -5,16 +5,15 @@
 
 /**
  * @file MountainNoise.h
- * @brief Alpine mountain terrain generator using Ken Perlin Gradient Noise,
- *        Kent Musgrave's Ridged Multifractal, and Domain Warping.
+ * @brief Realistic alpine mountain terrain generator using Ken Perlin Gradient Noise,
+ *        Kent Musgrave's Ridged Multifractal, and Organic Glacial Valley Shaping.
  *
- * Designed for Topic #11: Mountain Lake & Aurora.
- * Produces towering snow-capped peaks, sharp arêtes/ridges, steep rock cliffs,
- * and an organic glacial basin for the alpine lake.
+ * Produces a spacious green valley basin around an alpine lake, surrounded by
+ * rolling foothills, granite cliffs, and snow-capped mountain peaks.
  */
 namespace AlpineMountain {
 
-// Ken Perlin's reference permutation table (doubled to 512 for fast wrapping)
+// Ken Perlin's reference permutation table
 static const int PERM[256] = {
     151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,
     8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,
@@ -34,7 +33,7 @@ inline int p(int i) {
     return PERM[i & 255];
 }
 
-// Quintic Hermite curve: 6t^5 - 15t^4 + 10t^3 (zero 1st and 2nd derivatives at boundaries)
+// Quintic Hermite curve: 6t^5 - 15t^4 + 10t^3
 inline float fade(float t) {
     return t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);
 }
@@ -72,7 +71,7 @@ inline float perlin2D(float x, float y) {
     return lerp(v, lerp(u, g00, g10), lerp(u, g01, g11)) * 0.35f;
 }
 
-// Fractal Brownian Motion (smooth multi-scale octaves)
+// Fractal Brownian Motion
 inline float fbm(float x, float y, int octaves, float lacunarity = 2.0f, float gain = 0.5f) {
     float sum = 0.0f;
     float amp = 1.0f;
@@ -88,7 +87,6 @@ inline float fbm(float x, float y, int octaves, float lacunarity = 2.0f, float g
 }
 
 // Kent Musgrave's Ridged Multifractal Noise
-// Produces razor-sharp alpine arêtes, horns, and pyramid crests
 inline float ridgedMF(float x, float y, int octaves, float lacunarity = 2.05f, float gain = 0.5f, float offset = 1.0f) {
     float sum = 0.0f;
     float amp = 0.5f;
@@ -97,7 +95,7 @@ inline float ridgedMF(float x, float y, int octaves, float lacunarity = 2.05f, f
     for (int i = 0; i < octaves; ++i) {
         float n = perlin2D(x * freq, y * freq);
         float signal = offset - std::abs(n);
-        signal *= signal; // Exaggerate sharp knife-edge ridges
+        signal *= signal;
         signal *= weight;
         weight = std::clamp(signal * 2.0f, 0.0f, 1.0f);
         sum += signal * amp;
@@ -108,61 +106,59 @@ inline float ridgedMF(float x, float y, int octaves, float lacunarity = 2.05f, f
 }
 
 /**
- * @brief Samples normalized alpine mountain height at normalized UV coordinates [0, 1].
+ * @brief Samples normalized alpine terrain height at UV coordinates [0, 1].
  *        Returns height in [0.0, 1.0].
  */
 inline float sampleHeight(float u, float v) {
-    // Coordinate mapping centered at (0.5, 0.5)
     float nx = (u - 0.5f) * 2.0f; // [-1, 1]
     float ny = (v - 0.5f) * 2.0f; // [-1, 1]
 
-    // Domain warp: perturb coordinates with multi-scale noise for natural curved geology
-    float w1x = fbm(u * 2.5f, v * 2.5f, 3) * 0.35f;
-    float w1y = fbm(u * 2.5f + 4.3f, v * 2.5f + 2.1f, 3) * 0.35f;
+    // Domain warp: perturb coordinates with multi-scale noise for natural mountain curves
+    float w1x = fbm(u * 2.2f, v * 2.2f, 3) * 0.30f;
+    float w1y = fbm(u * 2.2f + 4.3f, v * 2.2f + 2.1f, 3) * 0.30f;
     float wu = u + w1x;
     float wv = v + w1y;
 
-    // Primary alpine mountain range (dramatic knife-edge ridges)
-    float r1 = ridgedMF(wu * 3.2f + 0.7f, wv * 3.2f + 1.2f, 6, 2.05f, 0.52f);
-    // Secondary cross-ridges (cirques, couloirs, and hanging valleys)
-    float r2 = ridgedMF(wu * 5.5f + 3.1f, wv * 5.5f + 2.7f, 5, 2.1f, 0.48f);
-    // Rocky texture & scree slopes
-    float f1 = fbm(wu * 8.0f, wv * 8.0f, 4, 2.0f, 0.45f);
+    // Mountain ridges and geological features
+    float r1 = ridgedMF(wu * 2.6f + 0.7f, wv * 2.6f + 1.2f, 5, 2.05f, 0.50f);
+    float r2 = ridgedMF(wu * 4.8f + 3.1f, wv * 4.8f + 2.7f, 4, 2.1f, 0.45f);
+    float f1 = fbm(wu * 6.5f, wv * 6.5f, 4, 2.0f, 0.45f);
 
-    float rawMountain = r1 * 0.65f + r2 * 0.25f + (f1 * 0.5f + 0.5f) * 0.10f;
+    float rawMountain = r1 * 0.60f + r2 * 0.25f + (f1 * 0.5f + 0.5f) * 0.15f;
 
-    // Glacial basin in center with natural organic shoreline
-    float lakeWarpX = fbm(nx * 1.5f, ny * 1.5f, 2) * 0.15f;
-    float lakeWarpY = fbm(nx * 1.5f + 3.0f, ny * 1.5f + 1.0f, 2) * 0.15f;
+    // Organic lake footprint
+    float lakeWarpX = fbm(nx * 1.2f, ny * 1.2f, 2) * 0.12f;
+    float lakeWarpY = fbm(nx * 1.2f + 2.5f, ny * 1.2f + 1.5f, 2) * 0.12f;
     float lx = nx + lakeWarpX;
     float ly = ny + lakeWarpY;
-    float dist = std::sqrt(lx * lx * 1.2f + ly * ly * 0.9f);
+    float dist = std::sqrt(lx * lx * 1.15f + ly * ly * 0.90f);
 
-    // Glacial Valley & Amphitheater Profile:
-    // dist < 0.20: Lake basin (flat, sunken water bed)
-    // 0.20 .. 0.36: Valley meadow / shore rising gently
-    // 0.36 .. 1.0: Towering alpine mountain walls
+    // Spacious Alpine Valley & Foothills Profile:
+    // dist < 0.22: calm lake basin (water bed)
+    // 0.22 .. 0.46: wide green valley meadows & gentle foothills (lots of greenery!)
+    // 0.46 .. 1.0: majestic alpine mountain peaks rising gracefully on the horizon
     float valleyMask = 0.0f;
-    if (dist < 0.20f) {
-        valleyMask = 0.015f * (dist / 0.20f);
-    } else if (dist < 0.36f) {
-        float t = (dist - 0.20f) / 0.16f;
-        valleyMask = 0.015f + (t * t) * 0.22f;
+    if (dist < 0.22f) {
+        valleyMask = 0.01f * (dist / 0.22f);
+    } else if (dist < 0.46f) {
+        float t = (dist - 0.22f) / 0.24f;
+        float ease = t * t * (3.0f - 2.0f * t);
+        valleyMask = 0.01f + ease * 0.28f;
     } else {
-        float t = (dist - 0.36f) / 0.64f;
+        float t = (dist - 0.46f) / 0.54f;
         t = std::clamp(t, 0.0f, 1.0f);
-        valleyMask = 0.235f + std::pow(t, 1.25f) * 0.765f;
+        valleyMask = 0.29f + std::pow(t, 1.30f) * 0.71f;
     }
 
-    // Majestic northern wall: Peaks across the northern horizon (ny < 0) reach maximum grandeur
-    float northBoost = (ny < 0.0f) ? (1.0f + (-ny) * 0.35f) : 1.0f;
+    // Northern mountains: taller peaks as scenic backdrop for Aurora
+    float northBoost = (ny < 0.0f) ? (1.0f + (-ny) * 0.30f) : 1.0f;
 
     float height = rawMountain * valleyMask * northBoost;
 
     // Flatten strictly inside the central lake basin to allow clean water plane placement
-    if (dist < 0.18f) {
-        float t = dist / 0.18f;
-        height = std::min(height, 0.01f + 0.02f * (t * t));
+    if (dist < 0.20f) {
+        float t = dist / 0.20f;
+        height = std::min(height, 0.005f + 0.015f * (t * t));
     }
 
     return std::clamp(height, 0.0f, 1.0f);

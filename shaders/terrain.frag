@@ -50,22 +50,29 @@ void main() {
     vec3 snowTex   = texture(uTexSnow, uvFlat).rgb;
 
     // --- Multi-Layer Altitude & Slope Blending ---
-    // 1. Valley grass / moss dominance at low elevations near the lake shore
-    float valleyFactor = 1.0 - smoothstep(0.06, 0.22, normalizedH);
-    vec3 lowerTerrain = mix(rockTex, valleyTex, valleyFactor);
+    // 1. Lush alpine vegetation & green valley meadows:
+    // Thrives throughout the lake shore, valley basin, and rolling foothills.
+    // Moderate and gentle slopes (slope > 0.35) stay green up to subalpine elevations (normalizedH < 0.55).
+    // Sheer cliff drops (slope < 0.35) expose rugged granite rock.
+    float grassElevation = 1.0 - smoothstep(0.24, 0.56, normalizedH);
+    float grassSlope     = smoothstep(0.25, 0.60, slope);
+    float grassFactor    = clamp(grassElevation * grassSlope, 0.0, 1.0);
+
+    vec3 baseTerrain = mix(rockTex, valleyTex, grassFactor);
 
     // 2. Alpine snow settling on high mountain peaks
-    // Steep rock cliffs shed snow naturally, while flatter peaks accumulate snow
-    float snowHeight = smoothstep(0.36, 0.66, normalizedH);
-    float snowSlope  = smoothstep(0.25, 0.65, slope);
+    // Steep rock cliffs shed snow naturally, while summits, ridges, and flatter peaks accumulate snow
+    float snowHeight = smoothstep(0.56, 0.82, normalizedH);
+    float snowSlope  = smoothstep(0.30, 0.70, slope);
     float snowFactor = clamp(snowHeight * snowSlope, 0.0, 1.0);
 
-    vec3 albedo = mix(lowerTerrain, snowTex, snowFactor);
+    vec3 albedo = mix(baseTerrain, snowTex, snowFactor);
 
     // --- Blinn-Phong Lighting Model ---
-    // Diffuse component (two-sided support with slight wrap for soft moonlit silhouettes)
+    // Diffuse component with soft moonlit wrap for natural night illumination
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * uLightColor;
+    float wrapDiff = max(dot(norm, lightDir) * 0.75 + 0.25, 0.0);
+    vec3 diffuse = mix(vec3(diff), vec3(wrapDiff), 0.30) * uLightColor;
 
     // Specular highlight: snow crystals and wet rock catch cold moonlight glints
     float shininess = mix(16.0, 48.0, snowFactor);

@@ -61,8 +61,8 @@ inline bool fileExists(const std::string& path) {
     return f.good();
 }
 
-inline void generateGrassValley(const std::string& path, int size = 512) {
-    if (fileExists(path)) return;
+inline void generateGrassValley(const std::string& path, int size = 512, bool forceOverwrite = false) {
+    if (!forceOverwrite && fileExists(path)) return;
     std::vector<unsigned char> img(size * size * 3);
 
     for (int y = 0; y < size; ++y) {
@@ -74,12 +74,12 @@ inline void generateGrassValley(const std::string& path, int size = 512) {
             float n2 = seamlessFbm(u, v, 16, 4, 202);
             float detail = seamlessNoise(u, v, 64, 303) * 0.15f;
 
-            // Palette: dark pine moss, soil patches, lush alpine greenery
+            // Palette: dark pine moss, rich alpine emerald grass, lush greenery
             float blend = std::clamp(n1 * 0.7f + n2 * 0.3f + detail, 0.0f, 1.0f);
 
-            float r = 0.08f + 0.07f * blend;
-            float g = 0.16f + 0.14f * blend;
-            float b = 0.09f + 0.06f * blend;
+            float r = 0.09f + 0.08f * blend;
+            float g = 0.28f + 0.18f * blend; // Rich vibrant alpine greenery
+            float b = 0.11f + 0.09f * blend;
 
             int idx = (y * size + x) * 3;
             img[idx + 0] = static_cast<unsigned char>(std::clamp(r * 255.0f, 0.0f, 255.0f));
