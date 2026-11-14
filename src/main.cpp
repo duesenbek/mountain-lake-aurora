@@ -2,11 +2,16 @@
 #include "Shader/Shader.h"
 #include "Mesh/Mesh.h"
 #include "Camera/Camera.h"
+#include "Terrain/Terrain.h"
+#include "Vendor/stb_image_write.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
+#include <vector>
+#include <cmath>
+#include <algorithm>
 
-// Camera instance (initial position overlooking the scene)
-Camera camera(glm::vec3(0.0f, 3.5f, 9.0f));
+// Camera instance elevated overlooking the mountain valley
+Camera camera(glm::vec3(0.0f, 16.0f, 26.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -22.0f);
 
 // Mouse cursor tracking
 float lastX = 1280.0f / 2.0f;
@@ -22,7 +27,13 @@ void processInput(GLFWwindow* window, float dt) {
         glfwSetWindowShouldClose(window, true);
     }
 
-    // Camera movement controls
+    // Speed boost with left control
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+        camera.setMovementSpeed(14.0f);
+    } else {
+        camera.setMovementSpeed(7.0f);
+    }
+
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.processKeyboard(FORWARD, dt);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -48,7 +59,7 @@ void mouseCallback(GLFWwindow* window, double xposIn, double yposIn) {
     }
 
     float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+    float yoffset = lastY - ypos;
 
     lastX = xpos;
     lastY = ypos;
@@ -60,10 +71,49 @@ void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
     camera.processMouseScroll(static_cast<float>(yoffset));
 }
 
+// Generates a grayscale heightmap PNG asset if it doesn't already exist
+void ensureHeightmapAsset(const std::string& path) {
+    const int W = 256;
+    const int H = 256;
+    std::vector<unsigned char> data(W * H);
+
+    float cx = W * 0.5f;
+    float cy = H * 0.5f;
+    float maxR = std::sqrt(cx * cx + cy * cy);
+
+    for (int y = 0; y < H; ++y) {
+        for (int x = 0; x < W; ++x) {
+            float dx = x - cx;
+            float dy = y - cy;
+            float dist = std::sqrt(dx * dx + dy * dy) / maxR;
+
+            float bowl = std::pow(dist, 1.8f);
+            float nx = static_cast<float>(x) / static_cast<float>(W);
+            float ny = static_cast<float>(y) / static_cast<float>(H);
+
+            float peaks = 0.5f * std::sin(nx * 14.0f) * std::cos(ny * 14.0f)
+                        + 0.25f * std::sin(nx * 28.0f + 1.2f) * std::cos(ny * 28.0f + 0.8f)
+                        + 0.125f * std::sin(nx * 56.0f) * std::sin(ny * 56.0f);
+
+            float val = bowl * 0.75f + peaks * 0.25f * bowl;
+            if (dist < 0.22f) {
+                float t = dist / 0.22f;
+                val *= (t * t);
+            }
+
+            val = std::clamp(val, 0.0f, 1.0f);
+            data[y * W + x] = static_cast<unsigned char>(val * 255.0f);
+        }
+    }
+
+    stbi_write_png(path.c_str(), W, H, 1, data.data(), W);
+    std::cout << "[Asset] Heightmap generated at " << path << std::endl;
+}
+
 int main() {
     const int SCR_WIDTH = 1280;
     const int SCR_HEIGHT = 720;
-    const std::string TITLE = "Mountain Lake Aurora - Interactive Camera (TASK-004)";
+    const std::string TITLE = "Mountain Lake Aurora - Terrain (TASK-005)";
 
     Window window(SCR_WIDTH, SCR_HEIGHT, TITLE);
     if (!window.init()) {
@@ -81,65 +131,77 @@ int main() {
     std::cout << "\nControls:" << std::endl;
     std::cout << "  [W/A/S/D] - Move Camera" << std::endl;
     std::cout << "  [Space/Shift] - Up/Down" << std::endl;
+    std::cout << "  [Left Ctrl] - Sprint / Fast Fly" << std::endl;
     std::cout << "  [Mouse] - Look around (pitch/yaw)" << std::endl;
     std::cout << "  [Scroll Wheel] - Zoom (FOV)" << std::endl;
     std::cout << "  [ESC] - Exit application\n" << std::endl;
 
-    // TASK-002: Load basic shader
-    Shader basicShader("shaders/basic.vert", "shaders/basic.frag");
-    if (!basicShader.isValid()) {
-        std::cerr << "Failed to initialize basic shader!" << std::endl;
+    // TASK-005: Initialize heightmap asset and Terrain
+    const std::string heightmapFile = "assets/heightmaps/mountain_valley.png";
+    ensureHeightmapAsset(heightmapFile);
+
+    Terrain terrain;
+    terrain.loadFromHeightmap(heightmapFile, 70.0f, 70.0f, 15.0f);
+
+    // Load Terrain Shaders
+    Shader terrainShader("shaders/terrain.vert", "shaders/terrain.frag");
+    if (!terrainShader.isValid()) {
+        std::cerr << "Failed to initialize terrain shader!" << std::endl;
         return -1;
     }
 
-    // TASK-003: Create meshes (Cube and Ground Plane)
-    Mesh cubeMesh = Mesh::createCube(1.5f);
-    Mesh planeMesh = Mesh::createPlane(20.0f, 20.0f, 20, 20);
+    // Also keep a reference water/lake placeholder plane in the valley center
+    Mesh lakePlaceholder = Mesh::createPlane(18.0f, 18.0f, 1, 1);
+    Shader basicShader("shaders/basic.vert", "shaders/basic.frag");
 
-    // Deep night blue clear color (base for mountain lake night scene)
-    const float clearR = 0.02f;
-    const float clearG = 0.04f;
-    const float clearB = 0.09f;
+    // Deep night blue clear color
+    const float clearR = 0.015f;
+    const float clearG = 0.03f;
+    const float clearB = 0.07f;
 
     // Main render loop
     while (!window.shouldClose()) {
-        // Calculate per-frame deltaTime
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        // Process inputs
         processInput(window.getHandle(), deltaTime);
 
-        // Rendering commands
         window.clear(clearR, clearG, clearB, 1.0f);
 
-        basicShader.use();
-
-        // TASK-004: Dynamic view & projection from Camera
         float aspectRatio = static_cast<float>(window.getWidth()) / static_cast<float>(window.getHeight());
-        glm::mat4 projection = camera.getProjectionMatrix(aspectRatio);
+        glm::mat4 projection = camera.getProjectionMatrix(aspectRatio, 0.1f, 250.0f);
         glm::mat4 view = camera.getViewMatrix();
 
-        basicShader.setMat4("projection", projection);
-        basicShader.setMat4("view", view);
+        // 1. Render Mountain Terrain
+        terrainShader.use();
+        terrainShader.setMat4("projection", projection);
+        terrainShader.setMat4("view", view);
 
-        // 1. Draw Ground Plane
-        glm::mat4 planeModel = glm::mat4(1.0f);
-        planeModel = glm::translate(planeModel, glm::vec3(0.0f, -1.0f, 0.0f));
-        basicShader.setMat4("model", planeModel);
-        basicShader.setVec4("uColor", glm::vec4(0.12f, 0.18f, 0.22f, 1.0f));
-        planeMesh.draw();
+        glm::mat4 terrainModel = glm::mat4(1.0f);
+        terrainShader.setMat4("model", terrainModel);
 
-        // 2. Draw Rotating 3D Test Cube
-        glm::mat4 cubeModel = glm::mat4(1.0f);
-        cubeModel = glm::translate(cubeModel, glm::vec3(0.0f, 0.5f, 0.0f));
-        cubeModel = glm::rotate(cubeModel, currentFrame * 0.8f, glm::vec3(0.5f, 1.0f, 0.0f));
-        basicShader.setMat4("model", cubeModel);
-        basicShader.setVec4("uColor", glm::vec4(0.2f, 0.65f, 0.85f, 1.0f));
-        cubeMesh.draw();
+        // Directional Moonlight & Ambient
+        terrainShader.setVec3("uLightDir", glm::vec3(0.4f, 0.8f, 0.3f));
+        terrainShader.setVec3("uLightColor", glm::vec3(0.55f, 0.65f, 0.85f));   // Cold moonlight
+        terrainShader.setVec3("uAmbientColor", glm::vec3(0.10f, 0.14f, 0.20f)); // Night ambient
+        terrainShader.setFloat("uMaxHeight", terrain.getMaxHeight());
 
-        // Swap buffers and poll I/O events
+        terrain.draw();
+
+        // 2. Render Temporary Lake Placeholder in valley center
+        if (basicShader.isValid()) {
+            basicShader.use();
+            basicShader.setMat4("projection", projection);
+            basicShader.setMat4("view", view);
+
+            glm::mat4 lakeModel = glm::mat4(1.0f);
+            lakeModel = glm::translate(lakeModel, glm::vec3(0.0f, 0.4f, 0.0f));
+            basicShader.setMat4("model", lakeModel);
+            basicShader.setVec4("uColor", glm::vec4(0.08f, 0.22f, 0.35f, 0.85f)); // Semi-transparent alpine water placeholder
+            lakePlaceholder.draw();
+        }
+
         window.swapBuffers();
         window.pollEvents();
     }

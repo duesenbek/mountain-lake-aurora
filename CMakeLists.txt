@@ -36,6 +36,11 @@ set(SOURCES
     src/Mesh/Mesh.h
     src/Camera/Camera.cpp
     src/Camera/Camera.h
+    src/Terrain/Terrain.cpp
+    src/Terrain/Terrain.h
+    src/Vendor/stb_impl.cpp
+    src/Vendor/stb_image.h
+    src/Vendor/stb_image_write.h
 )
 
 add_executable(mountain-lake-aurora ${SOURCES})

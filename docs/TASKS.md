@@ -13,7 +13,7 @@
 - [x] TASK-004: Interactive 3D Camera (WASD movement, mouse look, view/projection matrices, delta time) (Bekzat)
 
 ### Phase 2: Core Environment Elements
-- [ ] TASK-005: Mountain terrain generation (heightmap / procedural mesh with VAO/VBO/EBO) (Bekzat)
+- [x] TASK-005: Mountain terrain generation (heightmap loading via `stb_image`, procedural fallback, normal calculation, terrain vertex & fragment shaders) (Bekzat)
 - [ ] TASK-006: Mountain environment texturing and multi-layer blending (rock, snow) (Bekzat)
 - [ ] TASK-007: Lake geometry & reflective surface (Bekzat)
 - [ ] TASK-008: Starry skybox integration (cubemap texture loading & skybox shader) (Asylbek)
