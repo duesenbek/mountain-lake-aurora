@@ -6,6 +6,7 @@
 #include "Terrain/MountainNoise.h"
 #include "Texture/Texture.h"
 #include "Texture/TextureGenerator.h"
+#include "Lake/Lake.h"
 #include "Vendor/stb_image_write.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
@@ -96,7 +97,7 @@ void ensureHeightmapAsset(const std::string& path) {
 int main() {
     const int SCR_WIDTH = 1280;
     const int SCR_HEIGHT = 720;
-    const std::string TITLE = "Mountain Lake Aurora - Environment (TASK-006)";
+    const std::string TITLE = "Mountain Lake Aurora - Lake & Terrain (TASK-007)";
 
     Window window(SCR_WIDTH, SCR_HEIGHT, TITLE);
     if (!window.init()) {
@@ -145,14 +146,22 @@ int main() {
     terrainShader.setInt("uTexSnow", 2);
     terrainShader.setFloat("uTextureScale", 32.0f);
 
-    // Lake placeholder plane in the valley center
-    Mesh lakePlaceholder = Mesh::createPlane(42.0f, 38.0f, 1, 1);
-    Shader basicShader("shaders/basic.vert", "shaders/basic.frag");
+    // TASK-007: Initialize Alpine Lake (subdivided wave surface with Fresnel & specular highlights)
+    Lake lake(52.0f, 48.0f, 0.55f, 80, 80);
+    if (!lake.init("shaders/water.vert", "shaders/water.frag")) {
+        std::cerr << "Failed to initialize lake water surface!" << std::endl;
+        return -1;
+    }
+
+    // Directional Moonlight & Cold Night Sky Ambient
+    const glm::vec3 lightDir(0.4f, 0.8f, 0.3f);
+    const glm::vec3 lightColor(0.55f, 0.65f, 0.85f);
+    const glm::vec3 ambientColor(0.10f, 0.14f, 0.20f);
 
     // Deep night blue clear color
     const float clearR = 0.015f;
-    const float clearG = 0.03f;
-    const float clearB = 0.07f;
+    const float clearG = 0.025f;
+    const float clearB = 0.055f;
 
     // Main render loop
     while (!window.shouldClose()) {
@@ -168,7 +177,7 @@ int main() {
         glm::mat4 projection = camera.getProjectionMatrix(aspectRatio, 0.1f, 400.0f);
         glm::mat4 view = camera.getViewMatrix();
 
-        // 1. Render Mountain Terrain
+        // 1. Render Mountain Terrain (Opaque)
         terrainShader.use();
         terrainShader.setMat4("projection", projection);
         terrainShader.setMat4("view", view);
@@ -176,10 +185,9 @@ int main() {
         glm::mat4 terrainModel = glm::mat4(1.0f);
         terrainShader.setMat4("model", terrainModel);
 
-        // Directional Moonlight & Ambient
-        terrainShader.setVec3("uLightDir", glm::vec3(0.4f, 0.8f, 0.3f));
-        terrainShader.setVec3("uLightColor", glm::vec3(0.55f, 0.65f, 0.85f));   // Cold moonlight
-        terrainShader.setVec3("uAmbientColor", glm::vec3(0.10f, 0.14f, 0.20f)); // Night ambient
+        terrainShader.setVec3("uLightDir", lightDir);
+        terrainShader.setVec3("uLightColor", lightColor);
+        terrainShader.setVec3("uAmbientColor", ambientColor);
         terrainShader.setVec3("uViewPos", camera.getPosition());
         terrainShader.setFloat("uMaxHeight", terrain.getMaxHeight());
 
@@ -190,18 +198,8 @@ int main() {
 
         terrain.draw();
 
-        // 2. Render Temporary Lake Placeholder in valley center
-        if (basicShader.isValid()) {
-            basicShader.use();
-            basicShader.setMat4("projection", projection);
-            basicShader.setMat4("view", view);
-
-            glm::mat4 lakeModel = glm::mat4(1.0f);
-            lakeModel = glm::translate(lakeModel, glm::vec3(0.0f, 0.55f, 0.0f));
-            basicShader.setMat4("model", lakeModel);
-            basicShader.setVec4("uColor", glm::vec4(0.06f, 0.20f, 0.32f, 0.90f)); // Semi-transparent alpine water placeholder
-            lakePlaceholder.draw();
-        }
+        // 2. Render Alpine Lake Surface (TASK-007, Semi-transparent with animated waves & specular)
+        lake.render(projection, view, camera.getPosition(), lightDir, lightColor, ambientColor, currentFrame);
 
         window.swapBuffers();
         window.pollEvents();

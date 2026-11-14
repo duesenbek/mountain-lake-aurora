@@ -42,6 +42,8 @@ set(SOURCES
     src/Texture/Texture.cpp
     src/Texture/Texture.h
     src/Texture/TextureGenerator.h
+    src/Lake/Lake.cpp
+    src/Lake/Lake.h
     src/Vendor/stb_impl.cpp
     src/Vendor/stb_image.h
     src/Vendor/stb_image_write.h
