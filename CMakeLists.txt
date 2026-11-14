@@ -38,6 +38,7 @@ set(SOURCES
     src/Camera/Camera.h
     src/Terrain/Terrain.cpp
     src/Terrain/Terrain.h
+    src/Terrain/MountainNoise.h
     src/Texture/Texture.cpp
     src/Texture/Texture.h
     src/Texture/TextureGenerator.h

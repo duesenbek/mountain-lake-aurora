@@ -1,4 +1,5 @@
 #include "Terrain.h"
+#include "MountainNoise.h"
 #include "../Vendor/stb_image.h"
 #include <iostream>
 #include <cmath>
@@ -48,44 +49,16 @@ bool Terrain::generateProcedural(int resolutionX, int resolutionZ, float width, 
 
     m_heightGrid.resize(resolutionX * resolutionZ);
 
-    float centerX = static_cast<float>(resolutionX) * 0.5f;
-    float centerZ = static_cast<float>(resolutionZ) * 0.5f;
-    float maxRadius = std::sqrt(centerX * centerX + centerZ * centerZ);
-
     for (int z = 0; z < resolutionZ; ++z) {
+        float nz = static_cast<float>(z) / static_cast<float>(resolutionZ - 1);
         for (int x = 0; x < resolutionX; ++x) {
-            float nx = static_cast<float>(x) / static_cast<float>(resolutionX - 1); // [0, 1]
-            float nz = static_cast<float>(z) / static_cast<float>(resolutionZ - 1); // [0, 1]
-
-            // Distance from center (0 at lake center, 1 near map borders)
-            float dx = static_cast<float>(x) - centerX;
-            float dz = static_cast<float>(z) - centerZ;
-            float distFromCenter = std::sqrt(dx * dx + dz * dz) / maxRadius;
-
-            // Mountain valley ridge formula:
-            // 1. Bowl shape (mountains rise as distance from center increases)
-            float bowl = std::pow(distFromCenter, 1.8f);
-
-            // 2. Harmonic mountain peaks (octaves of sinusoids)
-            float peaks = 0.5f * std::sin(nx * 12.0f) * std::cos(nz * 12.0f)
-                        + 0.25f * std::sin(nx * 24.0f + 1.2f) * std::cos(nz * 24.0f + 0.8f)
-                        + 0.125f * std::sin(nx * 48.0f) * std::sin(nz * 48.0f);
-
-            float h = bowl * 0.75f + peaks * 0.25f * bowl;
-            h = std::clamp(h, 0.0f, 1.0f);
-
-            // Flatten the center valley floor for the alpine lake
-            if (distFromCenter < 0.22f) {
-                float t = distFromCenter / 0.22f;
-                h *= (t * t);
-            }
-
-            m_heightGrid[z * resolutionX + x] = h;
+            float nx = static_cast<float>(x) / static_cast<float>(resolutionX - 1);
+            m_heightGrid[z * resolutionX + x] = AlpineMountain::sampleHeight(nx, nz);
         }
     }
 
     buildMeshFromHeightData(m_heightGrid, m_resolutionX, m_resolutionZ);
-    std::cout << "[Terrain] Procedural mountain valley generated (" 
+    std::cout << "[Terrain] Procedural alpine mountain terrain generated (" 
               << resolutionX << "x" << resolutionZ << ")." << std::endl;
     return true;
 }

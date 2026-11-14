@@ -3,6 +3,7 @@
 #include "Mesh/Mesh.h"
 #include "Camera/Camera.h"
 #include "Terrain/Terrain.h"
+#include "Terrain/MountainNoise.h"
 #include "Texture/Texture.h"
 #include "Texture/TextureGenerator.h"
 #include "Vendor/stb_image_write.h"
@@ -13,7 +14,7 @@
 #include <algorithm>
 
 // Camera instance positioned at the lake shore looking up at the alpine peaks
-Camera camera(glm::vec3(0.0f, 3.5f, 26.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 4.0f);
+Camera camera(glm::vec3(0.0f, 3.8f, 24.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 7.0f);
 
 // Mouse cursor tracking
 float lastX = 1280.0f / 2.0f;
@@ -79,39 +80,17 @@ void ensureHeightmapAsset(const std::string& path) {
     const int H = 256;
     std::vector<unsigned char> data(W * H);
 
-    float cx = W * 0.5f;
-    float cy = H * 0.5f;
-    float maxR = std::sqrt(cx * cx + cy * cy);
-
     for (int y = 0; y < H; ++y) {
+        float ny = static_cast<float>(y) / static_cast<float>(H - 1);
         for (int x = 0; x < W; ++x) {
-            float dx = x - cx;
-            float dy = y - cy;
-            float dist = std::sqrt(dx * dx + dy * dy) / maxR;
-
-            float bowl = std::pow(dist, 1.4f);
-            float nx = static_cast<float>(x) / static_cast<float>(W);
-            float ny = static_cast<float>(y) / static_cast<float>(H);
-
-            // Sharp alpine ridge harmonics (aretes and jagged crags)
-            float ridge1 = 1.0f - std::abs(std::sin(nx * 14.0f + ny * 8.0f));
-            float ridge2 = 1.0f - std::abs(std::cos(nx * 26.0f - ny * 22.0f));
-            float harmonic = 0.5f * std::sin(nx * 32.0f) * std::cos(ny * 32.0f);
-            float peaks = 0.50f * ridge1 + 0.35f * ridge2 + 0.15f * harmonic;
-
-            float val = bowl * 0.65f + peaks * 0.45f * bowl;
-            if (dist < 0.20f) {
-                float t = dist / 0.20f;
-                val *= (t * t);
-            }
-
-            val = std::clamp(val, 0.0f, 1.0f);
-            data[y * W + x] = static_cast<unsigned char>(val * 255.0f);
+            float nx = static_cast<float>(x) / static_cast<float>(W - 1);
+            float val = AlpineMountain::sampleHeight(nx, ny);
+            data[y * W + x] = static_cast<unsigned char>(std::clamp(val * 255.0f, 0.0f, 255.0f));
         }
     }
 
     stbi_write_png(path.c_str(), W, H, 1, data.data(), W);
-    std::cout << "[Asset] Heightmap generated at " << path << std::endl;
+    std::cout << "[Asset] Alpine mountain heightmap generated at " << path << std::endl;
 }
 
 int main() {
@@ -140,12 +119,12 @@ int main() {
     std::cout << "  [Scroll Wheel] - Zoom (FOV)" << std::endl;
     std::cout << "  [ESC] - Exit application\n" << std::endl;
 
-    // TASK-005/006: Initialize grand mountain valley (140x140 area, 32.0m height)
+    // TASK-005/006: Initialize majestic alpine mountain valley (180x180 area, 65.0m height)
     const std::string heightmapFile = "assets/heightmaps/mountain_valley.png";
     ensureHeightmapAsset(heightmapFile);
 
     Terrain terrain;
-    terrain.loadFromHeightmap(heightmapFile, 140.0f, 140.0f, 32.0f);
+    terrain.loadFromHeightmap(heightmapFile, 180.0f, 180.0f, 65.0f);
 
     // Load Terrain Shaders
     Shader terrainShader("shaders/terrain.vert", "shaders/terrain.frag");
@@ -167,7 +146,7 @@ int main() {
     terrainShader.setFloat("uTextureScale", 32.0f);
 
     // Lake placeholder plane in the valley center
-    Mesh lakePlaceholder = Mesh::createPlane(34.0f, 34.0f, 1, 1);
+    Mesh lakePlaceholder = Mesh::createPlane(38.0f, 34.0f, 1, 1);
     Shader basicShader("shaders/basic.vert", "shaders/basic.frag");
 
     // Deep night blue clear color
@@ -218,9 +197,9 @@ int main() {
             basicShader.setMat4("view", view);
 
             glm::mat4 lakeModel = glm::mat4(1.0f);
-            lakeModel = glm::translate(lakeModel, glm::vec3(0.0f, 0.4f, 0.0f));
+            lakeModel = glm::translate(lakeModel, glm::vec3(0.0f, 0.55f, 0.0f));
             basicShader.setMat4("model", lakeModel);
-            basicShader.setVec4("uColor", glm::vec4(0.08f, 0.22f, 0.35f, 0.85f)); // Semi-transparent alpine water placeholder
+            basicShader.setVec4("uColor", glm::vec4(0.06f, 0.20f, 0.32f, 0.90f)); // Semi-transparent alpine water placeholder
             lakePlaceholder.draw();
         }
 

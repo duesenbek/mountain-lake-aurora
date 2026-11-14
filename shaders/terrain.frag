@@ -50,14 +50,14 @@ void main() {
     vec3 snowTex   = texture(uTexSnow, uvFlat).rgb;
 
     // --- Multi-Layer Altitude & Slope Blending ---
-    // 1. Valley grass / moss dominance at low elevations near the lake
-    float valleyFactor = 1.0 - smoothstep(0.10, 0.30, normalizedH);
+    // 1. Valley grass / moss dominance at low elevations near the lake shore
+    float valleyFactor = 1.0 - smoothstep(0.06, 0.22, normalizedH);
     vec3 lowerTerrain = mix(rockTex, valleyTex, valleyFactor);
 
-    // 2. Alpine snow settling on mountain heights
+    // 2. Alpine snow settling on high mountain peaks
     // Steep rock cliffs shed snow naturally, while flatter peaks accumulate snow
-    float snowHeight = smoothstep(0.42, 0.72, normalizedH);
-    float snowSlope  = smoothstep(0.30, 0.70, slope);
+    float snowHeight = smoothstep(0.36, 0.66, normalizedH);
+    float snowSlope  = smoothstep(0.25, 0.65, slope);
     float snowFactor = clamp(snowHeight * snowSlope, 0.0, 1.0);
 
     vec3 albedo = mix(lowerTerrain, snowTex, snowFactor);
