@@ -12,8 +12,8 @@
 #include <cmath>
 #include <algorithm>
 
-// Camera instance elevated overlooking the mountain valley
-Camera camera(glm::vec3(0.0f, 16.0f, 26.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -22.0f);
+// Camera instance positioned at the lake shore looking up at the alpine peaks
+Camera camera(glm::vec3(0.0f, 3.5f, 26.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 4.0f);
 
 // Mouse cursor tracking
 float lastX = 1280.0f / 2.0f;
@@ -29,11 +29,11 @@ void processInput(GLFWwindow* window, float dt) {
         glfwSetWindowShouldClose(window, true);
     }
 
-    // Speed boost with left control
+    // Speed boost with left control (fast fly across wide mountain valley)
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
-        camera.setMovementSpeed(14.0f);
+        camera.setMovementSpeed(26.0f);
     } else {
-        camera.setMovementSpeed(7.0f);
+        camera.setMovementSpeed(13.0f);
     }
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -89,17 +89,19 @@ void ensureHeightmapAsset(const std::string& path) {
             float dy = y - cy;
             float dist = std::sqrt(dx * dx + dy * dy) / maxR;
 
-            float bowl = std::pow(dist, 1.8f);
+            float bowl = std::pow(dist, 1.4f);
             float nx = static_cast<float>(x) / static_cast<float>(W);
             float ny = static_cast<float>(y) / static_cast<float>(H);
 
-            float peaks = 0.5f * std::sin(nx * 14.0f) * std::cos(ny * 14.0f)
-                        + 0.25f * std::sin(nx * 28.0f + 1.2f) * std::cos(ny * 28.0f + 0.8f)
-                        + 0.125f * std::sin(nx * 56.0f) * std::sin(ny * 56.0f);
+            // Sharp alpine ridge harmonics (aretes and jagged crags)
+            float ridge1 = 1.0f - std::abs(std::sin(nx * 14.0f + ny * 8.0f));
+            float ridge2 = 1.0f - std::abs(std::cos(nx * 26.0f - ny * 22.0f));
+            float harmonic = 0.5f * std::sin(nx * 32.0f) * std::cos(ny * 32.0f);
+            float peaks = 0.50f * ridge1 + 0.35f * ridge2 + 0.15f * harmonic;
 
-            float val = bowl * 0.75f + peaks * 0.25f * bowl;
-            if (dist < 0.22f) {
-                float t = dist / 0.22f;
+            float val = bowl * 0.65f + peaks * 0.45f * bowl;
+            if (dist < 0.20f) {
+                float t = dist / 0.20f;
                 val *= (t * t);
             }
 
@@ -115,7 +117,7 @@ void ensureHeightmapAsset(const std::string& path) {
 int main() {
     const int SCR_WIDTH = 1280;
     const int SCR_HEIGHT = 720;
-    const std::string TITLE = "Mountain Lake Aurora - Terrain (TASK-005)";
+    const std::string TITLE = "Mountain Lake Aurora - Environment (TASK-006)";
 
     Window window(SCR_WIDTH, SCR_HEIGHT, TITLE);
     if (!window.init()) {
@@ -138,12 +140,12 @@ int main() {
     std::cout << "  [Scroll Wheel] - Zoom (FOV)" << std::endl;
     std::cout << "  [ESC] - Exit application\n" << std::endl;
 
-    // TASK-005: Initialize heightmap asset and Terrain
+    // TASK-005/006: Initialize grand mountain valley (140x140 area, 32.0m height)
     const std::string heightmapFile = "assets/heightmaps/mountain_valley.png";
     ensureHeightmapAsset(heightmapFile);
 
     Terrain terrain;
-    terrain.loadFromHeightmap(heightmapFile, 70.0f, 70.0f, 15.0f);
+    terrain.loadFromHeightmap(heightmapFile, 140.0f, 140.0f, 32.0f);
 
     // Load Terrain Shaders
     Shader terrainShader("shaders/terrain.vert", "shaders/terrain.frag");
@@ -162,10 +164,10 @@ int main() {
     terrainShader.setInt("uTexValley", 0);
     terrainShader.setInt("uTexRock", 1);
     terrainShader.setInt("uTexSnow", 2);
-    terrainShader.setFloat("uTextureScale", 18.0f);
+    terrainShader.setFloat("uTextureScale", 32.0f);
 
-    // Also keep a reference water/lake placeholder plane in the valley center
-    Mesh lakePlaceholder = Mesh::createPlane(18.0f, 18.0f, 1, 1);
+    // Lake placeholder plane in the valley center
+    Mesh lakePlaceholder = Mesh::createPlane(34.0f, 34.0f, 1, 1);
     Shader basicShader("shaders/basic.vert", "shaders/basic.frag");
 
     // Deep night blue clear color
@@ -184,7 +186,7 @@ int main() {
         window.clear(clearR, clearG, clearB, 1.0f);
 
         float aspectRatio = static_cast<float>(window.getWidth()) / static_cast<float>(window.getHeight());
-        glm::mat4 projection = camera.getProjectionMatrix(aspectRatio, 0.1f, 250.0f);
+        glm::mat4 projection = camera.getProjectionMatrix(aspectRatio, 0.1f, 400.0f);
         glm::mat4 view = camera.getViewMatrix();
 
         // 1. Render Mountain Terrain
