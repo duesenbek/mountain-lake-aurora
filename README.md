@@ -7,7 +7,7 @@ The project simulates a nighttime nature scene featuring a mountainous terrain s
 
 ## Team
 - **Bekzat Duisenbek** (SE-2417)
-- **Asylbek** (SE-2417)
+- **Asylbek Agabekuly** (SE-2422)
 
 ## Tech Stack
 - **Language**: C++17
