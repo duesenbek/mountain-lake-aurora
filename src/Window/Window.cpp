@@ -45,8 +45,16 @@ bool Window::init() {
         return false;
     }
 
-    // Configure initial viewport
-    glViewport(0, 0, m_width, m_height);
+    // Configure initial viewport using actual framebuffer dimensions (Retina 2x support)
+    int fbWidth = 0, fbHeight = 0;
+    glfwGetFramebufferSize(m_window, &fbWidth, &fbHeight);
+    if (fbWidth > 0 && fbHeight > 0) {
+        m_width = fbWidth;
+        m_height = fbHeight;
+        glViewport(0, 0, fbWidth, fbHeight);
+    } else {
+        glViewport(0, 0, m_width, m_height);
+    }
     glEnable(GL_DEPTH_TEST);
 
     return true;

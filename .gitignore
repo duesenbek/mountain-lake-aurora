@@ -19,7 +19,6 @@ build/
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
-Makefile
 
 # Compiled binaries
 *.exe
@@ -36,3 +35,4 @@ mountain-lake-aurora
 # OS generated
 .DS_Store
 Thumbs.db
+.vscode/

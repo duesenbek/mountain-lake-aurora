@@ -7,43 +7,74 @@ in vec3 Normal;
 in vec2 TexCoords;
 in float Height;
 
-// Moonlight directional lighting parameters
-uniform vec3 uLightDir;       // Direction TO the light
-uniform vec3 uLightColor;     // Moonlight color (cold pale blue)
-uniform vec3 uAmbientColor;   // Night sky ambient color
-uniform float uMaxHeight;     // Maximum terrain height for procedural shading
+// Texture samplers (TASK-006: Multi-layer texturing)
+uniform sampler2D uTexValley; // Slot 0: Dark moss / alpine soil
+uniform sampler2D uTexRock;   // Slot 1: Stratified mountain rock / slate
+uniform sampler2D uTexSnow;   // Slot 2: Crisp alpine snow
+
+// Texture scaling and control
+uniform float uTextureScale;  // Scaling factor for planar UV mapping
+
+// Moonlight & Environment Lighting
+uniform vec3 uLightDir;       // Direction TO the light source
+uniform vec3 uLightColor;     // Cold moonlight color
+uniform vec3 uAmbientColor;   // Night ambient skylight
+uniform vec3 uViewPos;        // Camera world position for specular reflections
+uniform float uMaxHeight;     // Maximum terrain elevation
 
 void main() {
     vec3 norm = normalize(Normal);
     vec3 lightDir = normalize(uLightDir);
+    vec3 viewDir = normalize(uViewPos - FragPos);
+    vec3 halfwayDir = normalize(lightDir + viewDir);
 
-    // Diffuse lighting
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * uLightColor;
-    vec3 ambient = uAmbientColor;
-
-    // Height-based altitude slope coloration:
-    // Low: dark moss/rock near lake (0.0 - 0.25)
-    // Mid: rocky mountain cliff (0.25 - 0.70)
-    // High: snow-covered mountain peaks (0.70 - 1.0)
+    // Slope measure: 1.0 for flat plateaus, 0.0 for vertical cliff faces
+    float slope = clamp(abs(norm.y), 0.0, 1.0);
     float normalizedH = clamp(Height / uMaxHeight, 0.0, 1.0);
 
-    vec3 valleyColor = vec3(0.08, 0.12, 0.10);  // Dark pine valley floor
-    vec3 cliffColor  = vec3(0.18, 0.20, 0.22);  // Slate mountain rock
-    vec3 snowColor   = vec3(0.75, 0.82, 0.90);  // Alpine snow
+    // --- Slope-Aware Anti-Stretching Texture Sampling ---
+    // Horizontal mapping for valley floor and flat mountain peaks
+    vec2 uvFlat = FragPos.xz * (uTextureScale * 0.025);
 
-    vec3 terrainColor;
-    if (normalizedH < 0.3) {
-        float t = normalizedH / 0.3;
-        terrainColor = mix(valleyColor, cliffColor, t);
-    } else {
-        float t = (normalizedH - 0.3) / 0.7;
-        // Sharpen snow line based on slope (steeper cliffs keep rock, flat high peaks get snow)
-        float slope = max(dot(norm, vec3(0.0, 1.0, 0.0)), 0.0);
-        float snowFactor = smoothstep(0.45, 0.75, normalizedH * slope);
-        terrainColor = mix(cliffColor, snowColor, snowFactor);
-    }
+    // Vertical projection for steep cliff walls (eliminates vertical stretching artifacts)
+    vec2 uvCliffX = FragPos.zy * (uTextureScale * 0.025);
+    vec2 uvCliffZ = FragPos.xy * (uTextureScale * 0.025);
+    float weightX = abs(norm.x);
+    float weightZ = abs(norm.z);
+    vec3 cliffTex = (texture(uTexRock, uvCliffX).rgb * weightX + texture(uTexRock, uvCliffZ).rgb * weightZ) / max(weightX + weightZ, 0.001);
 
-    vec3 finalColor = (ambient + diffuse) * terrainColor;
+    vec3 flatRockTex = texture(uTexRock, uvFlat).rgb;
+    vec3 rockTex = mix(cliffTex, flatRockTex, smoothstep(0.25, 0.70, slope));
+
+    vec3 valleyTex = texture(uTexValley, uvFlat).rgb;
+    vec3 snowTex   = texture(uTexSnow, uvFlat).rgb;
+
+    // --- Multi-Layer Altitude & Slope Blending ---
+    // 1. Valley grass / moss dominance at low elevations near the lake
+    float valleyFactor = 1.0 - smoothstep(0.10, 0.30, normalizedH);
+    vec3 lowerTerrain = mix(rockTex, valleyTex, valleyFactor);
+
+    // 2. Alpine snow settling on mountain heights
+    // Steep rock cliffs shed snow naturally, while flatter peaks accumulate snow
+    float snowHeight = smoothstep(0.42, 0.72, normalizedH);
+    float snowSlope  = smoothstep(0.30, 0.70, slope);
+    float snowFactor = clamp(snowHeight * snowSlope, 0.0, 1.0);
+
+    vec3 albedo = mix(lowerTerrain, snowTex, snowFactor);
+
+    // --- Blinn-Phong Lighting Model ---
+    // Diffuse component (two-sided support with slight wrap for soft moonlit silhouettes)
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = diff * uLightColor;
+
+    // Specular highlight: snow crystals and wet rock catch cold moonlight glints
+    float shininess = mix(16.0, 48.0, snowFactor);
+    float specStrength = mix(0.12, 0.40, snowFactor);
+    float spec = pow(max(dot(norm, halfwayDir), 0.0), shininess) * specStrength;
+    vec3 specular = (diff > 0.0) ? (spec * uLightColor) : vec3(0.0);
+
+    vec3 ambient = uAmbientColor * albedo;
+    vec3 finalColor = ambient + (diffuse * albedo) + specular;
+
     FragColor = vec4(finalColor, 1.0);
 }

@@ -3,6 +3,8 @@
 #include "Mesh/Mesh.h"
 #include "Camera/Camera.h"
 #include "Terrain/Terrain.h"
+#include "Texture/Texture.h"
+#include "Texture/TextureGenerator.h"
 #include "Vendor/stb_image_write.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
@@ -150,6 +152,18 @@ int main() {
         return -1;
     }
 
+    // TASK-006: Ensure and load mountain environment textures (grass, rock, snow)
+    TextureGenerator::ensureTerrainTextures("assets/textures/");
+    Texture texValley("assets/textures/grass_valley.png");
+    Texture texRock("assets/textures/rock_cliff.png");
+    Texture texSnow("assets/textures/snow_peak.png");
+
+    terrainShader.use();
+    terrainShader.setInt("uTexValley", 0);
+    terrainShader.setInt("uTexRock", 1);
+    terrainShader.setInt("uTexSnow", 2);
+    terrainShader.setFloat("uTextureScale", 18.0f);
+
     // Also keep a reference water/lake placeholder plane in the valley center
     Mesh lakePlaceholder = Mesh::createPlane(18.0f, 18.0f, 1, 1);
     Shader basicShader("shaders/basic.vert", "shaders/basic.frag");
@@ -185,7 +199,13 @@ int main() {
         terrainShader.setVec3("uLightDir", glm::vec3(0.4f, 0.8f, 0.3f));
         terrainShader.setVec3("uLightColor", glm::vec3(0.55f, 0.65f, 0.85f));   // Cold moonlight
         terrainShader.setVec3("uAmbientColor", glm::vec3(0.10f, 0.14f, 0.20f)); // Night ambient
+        terrainShader.setVec3("uViewPos", camera.getPosition());
         terrainShader.setFloat("uMaxHeight", terrain.getMaxHeight());
+
+        // Bind multi-layer terrain textures (TASK-006)
+        texValley.bind(0);
+        texRock.bind(1);
+        texSnow.bind(2);
 
         terrain.draw();
 

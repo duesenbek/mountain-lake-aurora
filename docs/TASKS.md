@@ -14,7 +14,7 @@
 
 ### Phase 2: Core Environment Elements
 - [x] TASK-005: Mountain terrain generation (heightmap loading via `stb_image`, procedural fallback, normal calculation, terrain vertex & fragment shaders) (Bekzat)
-- [ ] TASK-006: Mountain environment texturing and multi-layer blending (rock, snow) (Bekzat)
+- [x] TASK-006: Mountain environment texturing and multi-layer blending (rock, snow) (Asylbek & Bekzat)
 - [ ] TASK-007: Lake geometry & reflective surface (Bekzat)
 - [ ] TASK-008: Starry skybox integration (cubemap texture loading & skybox shader) (Asylbek)
 - [ ] TASK-009: Directional moonlight and ambient night lighting (Blinn-Phong) (Asylbek)
