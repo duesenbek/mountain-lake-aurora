@@ -10,13 +10,13 @@
 - [x] TASK-001: OpenGL 3.3 Core Window (1280x720) and render loop abstraction (`Window.h`/`Window.cpp`) (Bekzat)
 - [x] TASK-002: Reusable shader loading, compilation, and uniform management system (`Shader.h`/`Shader.cpp`) (Asylbek)
 - [x] TASK-003: Basic 3D Mesh & Geometry System (`Mesh.h`/`Mesh.cpp` with VAO, VBO, EBO, Cube and Plane generation) (Bekzat)
-- [ ] TASK-004: Interactive 3D Camera (WASD movement, mouse look, view/projection matrices) (Bekzat)
+- [x] TASK-004: Interactive 3D Camera (WASD movement, mouse look, view/projection matrices, delta time) (Bekzat)
 
 ### Phase 2: Core Environment Elements
 - [ ] TASK-005: Mountain terrain generation (heightmap / procedural mesh with VAO/VBO/EBO) (Bekzat)
 - [ ] TASK-006: Mountain environment texturing and multi-layer blending (rock, snow) (Bekzat)
 - [ ] TASK-007: Lake geometry & reflective surface (Bekzat)
-- [ ] TASK-008: Starry skybox integration (Asylbek)
+- [ ] TASK-008: Starry skybox integration (cubemap texture loading & skybox shader) (Asylbek)
 - [ ] TASK-009: Directional moonlight and ambient night lighting (Blinn-Phong) (Asylbek)
 
 ### Phase 3: Water Surface & Aurora Effects
