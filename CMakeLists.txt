@@ -38,12 +38,14 @@ set(SOURCES
     src/Camera/Camera.h
     src/Terrain/Terrain.cpp
     src/Terrain/Terrain.h
-    src/Terrain/MountainNoise.h
     src/Texture/Texture.cpp
     src/Texture/Texture.h
-    src/Texture/TextureGenerator.h
     src/Lake/Lake.cpp
     src/Lake/Lake.h
+    src/Skybox/Skybox.cpp
+    src/Skybox/Skybox.h
+    src/Aurora/Aurora.cpp
+    src/Aurora/Aurora.h
     src/Vendor/stb_impl.cpp
     src/Vendor/stb_image.h
     src/Vendor/stb_image_write.h

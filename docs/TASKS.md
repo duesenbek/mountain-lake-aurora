@@ -16,16 +16,17 @@
 - [x] TASK-005: Mountain terrain generation (heightmap loading via `stb_image`, procedural fallback, normal calculation, terrain vertex & fragment shaders) (Bekzat)
 - [x] TASK-006: Mountain environment texturing and multi-layer blending (rock, snow) (Asylbek Agabekuly & Bekzat)
 - [x] TASK-007: Lake geometry & reflective surface (Bekzat & Asylbek Agabekuly)
-- [ ] TASK-008: Starry skybox integration (cubemap texture loading & skybox shader) (Asylbek Agabekuly)
-- [ ] TASK-009: Directional moonlight and ambient night lighting (Blinn-Phong) (Asylbek Agabekuly)
+- [x] TASK-008: Starry skybox integration (cubemap texture loading & skybox shader) (Asylbek Agabekuly & Bekzat)
+- [x] TASK-009: Animated Aurora Borealis geometry & procedural glowing shader (Asylbek Agabekuly & Bekzat)
 
-### Phase 3: Water Surface & Aurora Effects
-- [ ] TASK-010: Dynamic wave animation on water (Bekzat)
-- [ ] TASK-011: Aurora Borealis procedural shader (raymarching or ribbon geometry) (Asylbek Agabekuly)
-- [ ] TASK-012: Campfire point light & particle effect (Asylbek Agabekuly)
+### Phase 3: Lighting, Campfire & Scene Interactivity
+- [ ] TASK-010: Directional moonlight and ambient night lighting (Blinn-Phong) (Asylbek Agabekuly)
+- [ ] TASK-011: Campfire point light & particle / flame effect (Asylbek Agabekuly)
+- [ ] TASK-012: Scene management & transformation hierarchy (Bekzat)
 - [ ] TASK-013: Water reflection of the Aurora and terrain (Bekzat & Asylbek Agabekuly)
+- [ ] TASK-014: Scene interaction system (toggle campfire, adjust aurora intensity/speed) (Bekzat & Asylbek Agabekuly)
 
 ### Phase 4: Polish, Optimization & Reporting
-- [ ] TASK-014: Performance profiling and resource cleanup (Both)
-- [ ] TASK-015: Demonstration video and screenshots for final submission (Both)
-- [ ] TASK-016: Final project report drafting according to university rubric (Both)
+- [ ] TASK-015: Performance profiling and resource cleanup (Both)
+- [ ] TASK-016: Demonstration video and screenshots for final submission (Both)
+- [ ] TASK-017: Final project report drafting according to university rubric (Both)

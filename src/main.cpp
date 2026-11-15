@@ -3,10 +3,12 @@
 #include "Mesh/Mesh.h"
 #include "Camera/Camera.h"
 #include "Terrain/Terrain.h"
-#include "Terrain/MountainNoise.h"
 #include "Texture/Texture.h"
 #include "Texture/TextureGenerator.h"
+#include "Terrain/MountainNoise.h"
 #include "Lake/Lake.h"
+#include "Skybox/Skybox.h"
+#include "Aurora/Aurora.h"
 #include "Vendor/stb_image_write.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
@@ -14,8 +16,8 @@
 #include <cmath>
 #include <algorithm>
 
-// Camera instance positioned at the lake shore looking up at the alpine peaks
-Camera camera(glm::vec3(0.0f, 3.0f, 25.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 5.0f);
+// Camera instance elevated overlooking the mountain valley
+Camera camera(glm::vec3(0.0f, 18.0f, 32.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -18.0f);
 
 // Mouse cursor tracking
 float lastX = 1280.0f / 2.0f;
@@ -26,16 +28,20 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+// Global Aurora interactive controls
+float g_auroraIntensity = 1.2f;
+float g_auroraSpeed = 0.65f;
+
 void processInput(GLFWwindow* window, float dt) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
 
-    // Speed boost with left control (fast fly across wide mountain valley)
+    // Speed boost with left control
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
-        camera.setMovementSpeed(26.0f);
+        camera.setMovementSpeed(20.0f);
     } else {
-        camera.setMovementSpeed(13.0f);
+        camera.setMovementSpeed(8.5f);
     }
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -50,6 +56,16 @@ void processInput(GLFWwindow* window, float dt) {
         camera.processKeyboard(UP, dt);
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
         camera.processKeyboard(DOWN, dt);
+
+    // Interactive Aurora adjustments (TASK-015 preview)
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+        g_auroraIntensity = std::min(g_auroraIntensity + 0.6f * dt, 2.5f);
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+        g_auroraIntensity = std::max(g_auroraIntensity - 0.6f * dt, 0.1f);
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+        g_auroraSpeed = std::min(g_auroraSpeed + 0.5f * dt, 2.0f);
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+        g_auroraSpeed = std::max(g_auroraSpeed - 0.5f * dt, 0.1f);
 }
 
 void mouseCallback(GLFWwindow* window, double xposIn, double yposIn) {
@@ -75,7 +91,6 @@ void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
     camera.processMouseScroll(static_cast<float>(yoffset));
 }
 
-// Generates a grayscale heightmap PNG asset if it doesn't already exist
 void ensureHeightmapAsset(const std::string& path) {
     const int W = 256;
     const int H = 256;
@@ -97,7 +112,7 @@ void ensureHeightmapAsset(const std::string& path) {
 int main() {
     const int SCR_WIDTH = 1280;
     const int SCR_HEIGHT = 720;
-    const std::string TITLE = "Mountain Lake Aurora - Lake & Terrain (TASK-007)";
+    const std::string TITLE = "Mountain Lake Aurora - Full Night Scene (TASK-008 & TASK-009/010)";
 
     Window window(SCR_WIDTH, SCR_HEIGHT, TITLE);
     if (!window.init()) {
@@ -118,23 +133,32 @@ int main() {
     std::cout << "  [Left Ctrl] - Sprint / Fast Fly" << std::endl;
     std::cout << "  [Mouse] - Look around (pitch/yaw)" << std::endl;
     std::cout << "  [Scroll Wheel] - Zoom (FOV)" << std::endl;
+    std::cout << "  [Up/Down Arrows] - Adjust Aurora Intensity" << std::endl;
+    std::cout << "  [Left/Right Arrows] - Adjust Aurora Animation Speed" << std::endl;
     std::cout << "  [ESC] - Exit application\n" << std::endl;
 
-    // TASK-005/006: Initialize majestic alpine mountain valley (180x180 area, 48.0m height)
+    // TASK-008: Starry Skybox
+    Skybox skybox;
+    skybox.generateProceduralStars(512, 3500);
+
+    // TASK-009/010: Animated Aurora Borealis (curved multi-ribbon glowing curtains)
+    Aurora aurora;
+    aurora.init(3);
+
+    // TASK-005/006: Majestic alpine mountain valley (180x180 area, 48.0m height)
     const std::string heightmapFile = "assets/heightmaps/mountain_valley.png";
     ensureHeightmapAsset(heightmapFile);
 
     Terrain terrain;
     terrain.loadFromHeightmap(heightmapFile, 180.0f, 180.0f, 48.0f);
 
-    // Load Terrain Shaders
     Shader terrainShader("shaders/terrain.vert", "shaders/terrain.frag");
     if (!terrainShader.isValid()) {
         std::cerr << "Failed to initialize terrain shader!" << std::endl;
         return -1;
     }
 
-    // TASK-006: Ensure and load mountain environment textures (grass, rock, snow)
+    // Mountain textures (grass, rock, snow)
     TextureGenerator::ensureTerrainTextures("assets/textures/");
     Texture texValley("assets/textures/grass_valley.png");
     Texture texRock("assets/textures/rock_cliff.png");
@@ -146,7 +170,7 @@ int main() {
     terrainShader.setInt("uTexSnow", 2);
     terrainShader.setFloat("uTextureScale", 32.0f);
 
-    // TASK-007: Initialize Alpine Lake (subdivided wave surface with Fresnel & specular highlights)
+    // TASK-007: Alpine Lake
     Lake lake(52.0f, 48.0f, 0.55f, 80, 80);
     if (!lake.init("shaders/water.vert", "shaders/water.frag")) {
         std::cerr << "Failed to initialize lake water surface!" << std::endl;
@@ -158,7 +182,7 @@ int main() {
     const glm::vec3 lightColor(0.55f, 0.65f, 0.85f);
     const glm::vec3 ambientColor(0.10f, 0.14f, 0.20f);
 
-    // Deep night blue clear color
+    // Deep night clear color
     const float clearR = 0.015f;
     const float clearG = 0.025f;
     const float clearB = 0.055f;
@@ -174,7 +198,7 @@ int main() {
         window.clear(clearR, clearG, clearB, 1.0f);
 
         float aspectRatio = static_cast<float>(window.getWidth()) / static_cast<float>(window.getHeight());
-        glm::mat4 projection = camera.getProjectionMatrix(aspectRatio, 0.1f, 400.0f);
+        glm::mat4 projection = camera.getProjectionMatrix(aspectRatio, 0.1f, 500.0f);
         glm::mat4 view = camera.getViewMatrix();
 
         // 1. Render Mountain Terrain (Opaque)
@@ -191,14 +215,21 @@ int main() {
         terrainShader.setVec3("uViewPos", camera.getPosition());
         terrainShader.setFloat("uMaxHeight", terrain.getMaxHeight());
 
-        // Bind multi-layer terrain textures (TASK-006)
         texValley.bind(0);
         texRock.bind(1);
         texSnow.bind(2);
 
         terrain.draw();
 
-        // 2. Render Alpine Lake Surface (TASK-007, Semi-transparent with animated waves & specular)
+        // 2. Render Starry Skybox (rendered with GL_LEQUAL depth)
+        skybox.draw(view, projection);
+
+        // 3. Render Animated Aurora Borealis (curved luminous ribbons with additive blend)
+        aurora.setIntensity(g_auroraIntensity);
+        aurora.setSpeed(g_auroraSpeed);
+        aurora.draw(view, projection, currentFrame);
+
+        // 4. Render Alpine Lake Surface (Semi-transparent with animated waves & specular)
         lake.render(projection, view, camera.getPosition(), lightDir, lightColor, ambientColor, currentFrame);
 
         window.swapBuffers();
