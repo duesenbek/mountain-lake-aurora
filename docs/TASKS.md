@@ -20,13 +20,12 @@
 - [x] TASK-009: Animated Aurora Borealis geometry & procedural glowing shader (Asylbek Agabekuly & Bekzat)
 
 ### Phase 3: Lighting, Campfire & Scene Interactivity
-- [ ] TASK-010: Directional moonlight and ambient night lighting (Blinn-Phong) (Asylbek Agabekuly)
-- [ ] TASK-011: Campfire point light & particle / flame effect (Asylbek Agabekuly)
-- [ ] TASK-012: Scene management & transformation hierarchy (Bekzat)
-- [ ] TASK-013: Water reflection of the Aurora and terrain (Bekzat & Asylbek Agabekuly)
-- [ ] TASK-014: Scene interaction system (toggle campfire, adjust aurora intensity/speed) (Bekzat & Asylbek Agabekuly)
+- [x] TASK-010: Directional moonlight and ambient night lighting (Blinn-Phong) (Asylbek Agabekuly & Bekzat)
+- [x] TASK-011: Campfire point light & flickering flame effect with attenuation (Asylbek Agabekuly & Bekzat)
+- [x] TASK-012: Scene management & transformation hierarchy (`SceneNode.h` Parent-Child structure) (Bekzat)
+- [x] TASK-014: Scene interaction system (toggle campfire [C], toggle moonlight [L], camera presets [1/2], aurora controls [Arrows], real-time FPS counter in title) (Bekzat & Asylbek Agabekuly)
 
 ### Phase 4: Polish, Optimization & Reporting
-- [ ] TASK-015: Performance profiling and resource cleanup (Both)
+- [x] TASK-015: Performance profiling and resource cleanup (Both)
 - [ ] TASK-016: Demonstration video and screenshots for final submission (Both)
 - [ ] TASK-017: Final project report drafting according to university rubric (Both)

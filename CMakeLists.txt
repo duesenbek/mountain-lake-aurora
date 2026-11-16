@@ -46,6 +46,9 @@ set(SOURCES
     src/Skybox/Skybox.h
     src/Aurora/Aurora.cpp
     src/Aurora/Aurora.h
+    src/Campfire/Campfire.cpp
+    src/Campfire/Campfire.h
+    src/Campfire/SceneNode.h
     src/Vendor/stb_impl.cpp
     src/Vendor/stb_image.h
     src/Vendor/stb_image_write.h

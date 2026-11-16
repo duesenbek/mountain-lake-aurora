@@ -9,37 +9,50 @@
 #include "Lake/Lake.h"
 #include "Skybox/Skybox.h"
 #include "Aurora/Aurora.h"
+#include "Campfire/Campfire.h"
 #include "Vendor/stb_image_write.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <iomanip>
+#include <sstream>
 
-// Camera instance elevated overlooking the mountain valley
-Camera camera(glm::vec3(0.0f, 18.0f, 32.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -18.0f);
+// Camera instance overlooking the lake and campfire
+Camera camera(glm::vec3(0.0f, 6.5f, 22.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -8.0f);
 
 // Mouse cursor tracking
 float lastX = 1280.0f / 2.0f;
 float lastY = 720.0f / 2.0f;
 bool firstMouse = true;
 
-// Timing
+// Timing & FPS Profiling
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+int frameCount = 0;
+float fpsTimer = 0.0f;
 
-// Global Aurora interactive controls
+// Scene Interaction states (TASK-014 / 015)
 float g_auroraIntensity = 1.2f;
 float g_auroraSpeed = 0.65f;
+bool g_moonlightActive = true;
+bool g_cKeyPressed = false;
+bool g_lKeyPressed = false;
+bool g_oneKeyPressed = false;
+bool g_twoKeyPressed = false;
+
+// Global Campfire instance
+Campfire campfire(glm::vec3(8.5f, 0.55f, 16.0f));
 
 void processInput(GLFWwindow* window, float dt) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
 
-    // Speed boost with left control
+    // Sprint mode
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
-        camera.setMovementSpeed(20.0f);
+        camera.setMovementSpeed(22.0f);
     } else {
         camera.setMovementSpeed(8.5f);
     }
@@ -57,15 +70,59 @@ void processInput(GLFWwindow* window, float dt) {
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
         camera.processKeyboard(DOWN, dt);
 
-    // Interactive Aurora adjustments (TASK-015 preview)
+    // Interactive Aurora adjustments
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-        g_auroraIntensity = std::min(g_auroraIntensity + 0.6f * dt, 2.5f);
+        g_auroraIntensity = std::min(g_auroraIntensity + 0.7f * dt, 2.5f);
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        g_auroraIntensity = std::max(g_auroraIntensity - 0.6f * dt, 0.1f);
+        g_auroraIntensity = std::max(g_auroraIntensity - 0.7f * dt, 0.1f);
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-        g_auroraSpeed = std::min(g_auroraSpeed + 0.5f * dt, 2.0f);
+        g_auroraSpeed = std::min(g_auroraSpeed + 0.6f * dt, 2.5f);
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-        g_auroraSpeed = std::max(g_auroraSpeed - 0.5f * dt, 0.1f);
+        g_auroraSpeed = std::max(g_auroraSpeed - 0.6f * dt, 0.1f);
+
+    // Toggle Campfire [C]
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+        if (!g_cKeyPressed) {
+            campfire.toggle();
+            std::cout << "[Interaction] Campfire " << (campfire.isActive() ? "IGNITED" : "EXTINGUISHED") << std::endl;
+            g_cKeyPressed = true;
+        }
+    } else {
+        g_cKeyPressed = false;
+    }
+
+    // Toggle Moonlight [L]
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
+        if (!g_lKeyPressed) {
+            g_moonlightActive = !g_moonlightActive;
+            std::cout << "[Interaction] Moonlight " << (g_moonlightActive ? "ON" : "OFF") << std::endl;
+            g_lKeyPressed = true;
+        }
+    } else {
+        g_lKeyPressed = false;
+    }
+
+    // Preset 1: Campfire & Shore View
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+        if (!g_oneKeyPressed) {
+            camera.setPosition(glm::vec3(6.5f, 2.2f, 19.5f));
+            std::cout << "[Camera Preset] Shoreline & Campfire view." << std::endl;
+            g_oneKeyPressed = true;
+        }
+    } else {
+        g_oneKeyPressed = false;
+    }
+
+    // Preset 2: Panoramic Mountain & Aurora Aerial View
+    if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+        if (!g_twoKeyPressed) {
+            camera.setPosition(glm::vec3(0.0f, 24.0f, 38.0f));
+            std::cout << "[Camera Preset] Aerial panoramic view." << std::endl;
+            g_twoKeyPressed = true;
+        }
+    } else {
+        g_twoKeyPressed = false;
+    }
 }
 
 void mouseCallback(GLFWwindow* window, double xposIn, double yposIn) {
@@ -112,7 +169,7 @@ void ensureHeightmapAsset(const std::string& path) {
 int main() {
     const int SCR_WIDTH = 1280;
     const int SCR_HEIGHT = 720;
-    const std::string TITLE = "Mountain Lake Aurora - Full Night Scene (TASK-008 & TASK-009/010)";
+    const std::string TITLE = "Mountain Lake Aurora";
 
     Window window(SCR_WIDTH, SCR_HEIGHT, TITLE);
     if (!window.init()) {
@@ -120,32 +177,37 @@ int main() {
         return -1;
     }
 
-    // Capture cursor for smooth FPS camera control
     glfwSetInputMode(window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window.getHandle(), mouseCallback);
     glfwSetScrollCallback(window.getHandle(), scrollCallback);
 
-    std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
-    std::cout << "Renderer: " << glGetString(GL_RENDERER) << std::endl;
-    std::cout << "\nControls:" << std::endl;
-    std::cout << "  [W/A/S/D] - Move Camera" << std::endl;
-    std::cout << "  [Space/Shift] - Up/Down" << std::endl;
-    std::cout << "  [Left Ctrl] - Sprint / Fast Fly" << std::endl;
-    std::cout << "  [Mouse] - Look around (pitch/yaw)" << std::endl;
-    std::cout << "  [Scroll Wheel] - Zoom (FOV)" << std::endl;
-    std::cout << "  [Up/Down Arrows] - Adjust Aurora Intensity" << std::endl;
-    std::cout << "  [Left/Right Arrows] - Adjust Aurora Animation Speed" << std::endl;
-    std::cout << "  [ESC] - Exit application\n" << std::endl;
+    std::cout << "========================================================\n"
+              << "  Mountain Lake Aurora (OpenGL 3.3 Core)\n"
+              << "  Authors: Bekzat Duisenbek (SE-2417) & Asylbek Agabekuly (SE-2422)\n"
+              << "========================================================\n"
+              << "Controls:\n"
+              << "  [W/A/S/D] - Fly Camera\n"
+              << "  [Space/Shift] - Elevation Up/Down\n"
+              << "  [Left Ctrl] - Sprint Flight\n"
+              << "  [Mouse] - Look Around\n"
+              << "  [Scroll] - Zoom FOV\n"
+              << "  [C] - Ignite / Extinguish Campfire\n"
+              << "  [L] - Toggle Moonlight\n"
+              << "  [Up/Down Arrows] - Aurora Intensity\n"
+              << "  [Left/Right Arrows] - Aurora Animation Speed\n"
+              << "  [1 / 2] - Switch Camera View Presets\n"
+              << "  [ESC] - Exit Application\n"
+              << "========================================================\n" << std::endl;
 
-    // TASK-008: Starry Skybox
+    // 1. Starry Skybox
     Skybox skybox;
     skybox.generateProceduralStars(512, 3500);
 
-    // TASK-009/010: Animated Aurora Borealis (curved multi-ribbon glowing curtains)
+    // 2. Animated Aurora Borealis
     Aurora aurora;
     aurora.init(3);
 
-    // TASK-005/006: Majestic alpine mountain valley (180x180 area, 48.0m height)
+    // 3. Terrain & Heightmap
     const std::string heightmapFile = "assets/heightmaps/mountain_valley.png";
     ensureHeightmapAsset(heightmapFile);
 
@@ -158,7 +220,6 @@ int main() {
         return -1;
     }
 
-    // Mountain textures (grass, rock, snow)
     TextureGenerator::ensureTerrainTextures("assets/textures/");
     Texture texValley("assets/textures/grass_valley.png");
     Texture texRock("assets/textures/rock_cliff.png");
@@ -170,38 +231,55 @@ int main() {
     terrainShader.setInt("uTexSnow", 2);
     terrainShader.setFloat("uTextureScale", 32.0f);
 
-    // TASK-007: Alpine Lake
+    // 4. Alpine Lake Surface
     Lake lake(52.0f, 48.0f, 0.55f, 80, 80);
     if (!lake.init("shaders/water.vert", "shaders/water.frag")) {
         std::cerr << "Failed to initialize lake water surface!" << std::endl;
         return -1;
     }
 
-    // Directional Moonlight & Cold Night Sky Ambient
+    // 5. Hierarchical Campfire (Positioned naturally on the meadow shore)
+    float groundY = terrain.getHeightAt(9.0f, 15.0f);
+    campfire.setPosition(glm::vec3(9.0f, groundY + 0.05f, 15.0f));
+    campfire.init();
+
+    // Directional Moonlight
     const glm::vec3 lightDir(0.4f, 0.8f, 0.3f);
     const glm::vec3 lightColor(0.55f, 0.65f, 0.85f);
-    const glm::vec3 ambientColor(0.10f, 0.14f, 0.20f);
+    const glm::vec3 ambientColor(0.08f, 0.12f, 0.18f);
 
-    // Deep night clear color
-    const float clearR = 0.015f;
-    const float clearG = 0.025f;
-    const float clearB = 0.055f;
-
-    // Main render loop
+    // Render loop
     while (!window.shouldClose()) {
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
+        // FPS Counter in window title
+        frameCount++;
+        fpsTimer += deltaTime;
+        if (fpsTimer >= 0.5f) {
+            float fps = static_cast<float>(frameCount) / fpsTimer;
+            std::stringstream ss;
+            ss << "Mountain Lake Aurora | FPS: " << std::fixed << std::setprecision(1) << fps
+               << " | Campfire: " << (campfire.isActive() ? "ON" : "OFF")
+               << " | Moon: " << (g_moonlightActive ? "ON" : "OFF")
+               << " | Aurora: " << std::setprecision(2) << g_auroraIntensity;
+            glfwSetWindowTitle(window.getHandle(), ss.str().c_str());
+            frameCount = 0;
+            fpsTimer = 0.0f;
+        }
+
         processInput(window.getHandle(), deltaTime);
 
-        window.clear(clearR, clearG, clearB, 1.0f);
+        window.clear(0.012f, 0.022f, 0.045f, 1.0f);
 
         float aspectRatio = static_cast<float>(window.getWidth()) / static_cast<float>(window.getHeight());
         glm::mat4 projection = camera.getProjectionMatrix(aspectRatio, 0.1f, 500.0f);
         glm::mat4 view = camera.getViewMatrix();
 
-        // 1. Render Mountain Terrain (Opaque)
+        PointLight pLight = campfire.getLightData(currentFrame);
+
+        // 1. Render Terrain with Moon + Campfire Point Light
         terrainShader.use();
         terrainShader.setMat4("projection", projection);
         terrainShader.setMat4("view", view);
@@ -214,6 +292,15 @@ int main() {
         terrainShader.setVec3("uAmbientColor", ambientColor);
         terrainShader.setVec3("uViewPos", camera.getPosition());
         terrainShader.setFloat("uMaxHeight", terrain.getMaxHeight());
+        terrainShader.setFloat("uMoonActive", g_moonlightActive ? 1.0f : 0.0f);
+
+        // Campfire Point Light Uniforms
+        terrainShader.setVec3("uPointLightPos", pLight.position);
+        terrainShader.setVec3("uPointLightColor", pLight.color);
+        terrainShader.setFloat("uPointLightIntensity", pLight.intensity);
+        terrainShader.setFloat("uPointLightConst", pLight.constant);
+        terrainShader.setFloat("uPointLightLinear", pLight.linear);
+        terrainShader.setFloat("uPointLightQuad", pLight.quadratic);
 
         texValley.bind(0);
         texRock.bind(1);
@@ -221,16 +308,20 @@ int main() {
 
         terrain.draw();
 
-        // 2. Render Starry Skybox (rendered with GL_LEQUAL depth)
+        // 2. Render Starry Skybox
         skybox.draw(view, projection);
 
-        // 3. Render Animated Aurora Borealis (curved luminous ribbons with additive blend)
+        // 3. Render Animated Aurora Borealis
         aurora.setIntensity(g_auroraIntensity);
         aurora.setSpeed(g_auroraSpeed);
         aurora.draw(view, projection, currentFrame);
 
-        // 4. Render Alpine Lake Surface (Semi-transparent with animated waves & specular)
-        lake.render(projection, view, camera.getPosition(), lightDir, lightColor, ambientColor, currentFrame);
+        // 4. Render Campfire (Logs, Ring of Stones, Flickering Flame via Hierarchy)
+        campfire.render(projection, view, currentFrame);
+
+        // 5. Render Alpine Lake Surface (Waves, Fresnel, Specular)
+        glm::vec3 activeMoonCol = g_moonlightActive ? lightColor : glm::vec3(0.0f);
+        lake.render(projection, view, camera.getPosition(), lightDir, activeMoonCol, ambientColor, currentFrame);
 
         window.swapBuffers();
         window.pollEvents();
