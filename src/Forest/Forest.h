@@ -38,7 +38,7 @@ public:
               int treeCount = 280,
               float minRadius = 32.0f,
               float maxRadius = 78.0f,
-              const glm::vec3& campfirePos = glm::vec3(-32.0f, 5.1f, -19.0f));
+              const glm::vec3& campfirePos = glm::vec3(-22.0f, 1.15f, 25.0f));
 
     // Renders all pine trees in a single GPU draw call using instanced rendering
     void render(const glm::mat4& projection,

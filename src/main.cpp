@@ -20,8 +20,8 @@
 #include <iomanip>
 #include <sstream>
 
-// Camera instance overlooking the hillside campfire terrace, lake panorama, and aurora
-Camera camera(glm::vec3(-27.0f, 7.2f, -13.0f), glm::vec3(0.0f, 1.0f, 0.0f), -135.0f, -12.0f);
+// Camera instance overlooking the lake, mountain panorama, and campfire on the meadow
+Camera camera(glm::vec3(-16.0f, 4.5f, 33.0f), glm::vec3(0.0f, 1.0f, 0.0f), -115.0f, -6.0f);
 
 // Mouse cursor tracking
 float lastX = 1280.0f / 2.0f;
@@ -43,8 +43,8 @@ bool g_lKeyPressed = false;
 bool g_oneKeyPressed = false;
 bool g_twoKeyPressed = false;
 
-// Global Campfire instance (positioned precisely on left hillside terrace from Screenshot 1)
-Campfire campfire(glm::vec3(-32.0f, 5.1f, -19.0f));
+// Global Campfire instance (positioned safely on left meadow slope)
+Campfire campfire(glm::vec3(-22.0f, 1.15f, 25.0f));
 
 void processInput(GLFWwindow* window, float dt, const Terrain& terrain, float waterLevel) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
@@ -103,12 +103,12 @@ void processInput(GLFWwindow* window, float dt, const Terrain& terrain, float wa
         g_lKeyPressed = false;
     }
 
-    // Preset 1: Campfire & Meadow Terrace View (Hillside terrace overlooking lake)
+    // Preset 1: Campfire & Shore View (On dry meadow shore overlooking lake)
     if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
         if (!g_oneKeyPressed) {
-            float fireY = terrain.getHeightAt(-32.0f, -19.0f);
-            camera.setPosition(glm::vec3(-27.0f, fireY + 1.8f, -13.0f));
-            std::cout << "[Camera Preset] Hillside Campfire & Lake terrace view." << std::endl;
+            float fireY = terrain.getHeightAt(-22.0f, 25.0f);
+            camera.setPosition(glm::vec3(-18.0f, fireY + 1.6f, 29.0f));
+            std::cout << "[Camera Preset] Shoreline & Campfire view." << std::endl;
             g_oneKeyPressed = true;
         }
     } else {
@@ -256,9 +256,9 @@ int main() {
         return -1;
     }
 
-    // 5. Hierarchical Campfire (Positioned on hillside meadow terrace matching Screenshot 1)
-    float campfireGroundY = terrain.getHeightAt(-32.0f, -19.0f);
-    campfire.setPosition(glm::vec3(-32.0f, campfireGroundY + 0.05f, -19.0f));
+    // 5. Hierarchical Campfire (Positioned on meadow shore matching circled location)
+    float campfireGroundY = terrain.getHeightAt(-22.0f, 25.0f);
+    campfire.setPosition(glm::vec3(-22.0f, campfireGroundY + 0.05f, 25.0f));
     campfire.init();
 
     // 6. Instanced Boreal Pine Forest along Mountain Foothills (280 realistic conifer trees)
