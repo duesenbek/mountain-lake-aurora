@@ -35,10 +35,10 @@ public:
     // Initializes pine tree mesh, generates instances around the mountain foothills,
     // and compiles the wind-animated tree shader
     bool init(const Terrain& terrain,
-              int treeCount = 220,
-              float minRadius = 33.0f,
-              float maxRadius = 75.0f,
-              const glm::vec3& campfirePos = glm::vec3(14.0f, 3.0f, 33.0f));
+              int treeCount = 280,
+              float minRadius = 32.0f,
+              float maxRadius = 78.0f,
+              const glm::vec3& campfirePos = glm::vec3(-22.0f, 1.15f, 25.0f));
 
     // Renders all pine trees in a single GPU draw call using instanced rendering
     void render(const glm::mat4& projection,

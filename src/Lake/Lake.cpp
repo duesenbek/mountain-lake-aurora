@@ -44,6 +44,10 @@ void Lake::render(const glm::mat4& projection,
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    // Backface culling: prevent bottom face of water plane from rendering if viewed from beneath
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
     m_shader->use();
     m_shader->setMat4("projection", projection);
     m_shader->setMat4("view", view);
@@ -61,5 +65,6 @@ void Lake::render(const glm::mat4& projection,
 
     m_mesh.draw();
 
+    glDisable(GL_CULL_FACE);
     glDisable(GL_BLEND);
 }

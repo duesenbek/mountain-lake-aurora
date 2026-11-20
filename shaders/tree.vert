@@ -12,15 +12,32 @@ uniform float uTime;
 out vec3 FragPos;
 out vec3 Normal;
 out vec3 Color;
+out float DistFromCenter;
 
 void main() {
     vec3 localPos = aPos;
 
-    // Gentle wind sway on pine treetops (only affects upper foliage, trunk base stays rooted)
-    float heightFactor = max(aPos.y - 1.2, 0.0);
-    float windPhase = uTime * 1.5 + aInstanceMatrix[3].x * 0.25 + aInstanceMatrix[3].z * 0.20;
-    float swayX = sin(windPhase) * 0.045 * heightFactor;
-    float swayZ = cos(windPhase * 0.8) * 0.035 * heightFactor;
+    // Natural mountain wind physics:
+    // 1. Trunk flex: increases quadratically with height above ground
+    float heightNorm = clamp(aPos.y / 7.2, 0.0, 1.0);
+    float trunkFlex = heightNorm * heightNorm;
+    
+    // Instance-dependent wind phase variation
+    float worldSeed = aInstanceMatrix[3].x * 0.18 + aInstanceMatrix[3].z * 0.15;
+    float windTime = uTime * 1.35 + worldSeed;
+    
+    // Multi-frequency wind gust modulation
+    float gust = sin(windTime * 0.5) * 0.4 + sin(windTime * 1.1) * 0.6;
+    float swayX = gust * 0.12 * trunkFlex;
+    float swayZ = cos(windTime * 0.85) * 0.08 * trunkFlex;
+
+    // 2. High-frequency flutter on outer branch tips
+    float radialDist = length(aPos.xz);
+    if (radialDist > 0.4 && aPos.y > 0.6) {
+        float tipFlutter = sin(uTime * 3.2 + radialDist * 4.0 + worldSeed * 2.0) * 0.022 * (radialDist / 2.5);
+        localPos.y += tipFlutter;
+    }
+
     localPos.x += swayX;
     localPos.z += swayZ;
 
@@ -30,6 +47,7 @@ void main() {
     FragPos = worldPos.xyz;
     Normal = normalize(normalMatrix * aNormal);
     Color = aColor;
+    DistFromCenter = radialDist;
 
     gl_Position = projection * view * worldPos;
 }

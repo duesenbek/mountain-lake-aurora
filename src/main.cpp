@@ -20,8 +20,8 @@
 #include <iomanip>
 #include <sstream>
 
-// Camera instance overlooking the lake and campfire
-Camera camera(glm::vec3(12.0f, 4.8f, 38.0f), glm::vec3(0.0f, 1.0f, 0.0f), -95.0f, -5.0f);
+// Camera instance overlooking the lake, mountain panorama, and campfire on the meadow
+Camera camera(glm::vec3(-16.0f, 4.5f, 33.0f), glm::vec3(0.0f, 1.0f, 0.0f), -115.0f, -6.0f);
 
 // Mouse cursor tracking
 float lastX = 1280.0f / 2.0f;
@@ -43,10 +43,10 @@ bool g_lKeyPressed = false;
 bool g_oneKeyPressed = false;
 bool g_twoKeyPressed = false;
 
-// Global Campfire instance (positioned safely on dry meadow shore)
-Campfire campfire(glm::vec3(14.0f, 3.0f, 33.0f));
+// Global Campfire instance (positioned safely on left meadow slope)
+Campfire campfire(glm::vec3(-22.0f, 1.15f, 25.0f));
 
-void processInput(GLFWwindow* window, float dt) {
+void processInput(GLFWwindow* window, float dt, const Terrain& terrain, float waterLevel) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
@@ -106,7 +106,8 @@ void processInput(GLFWwindow* window, float dt) {
     // Preset 1: Campfire & Shore View (On dry meadow shore overlooking lake)
     if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
         if (!g_oneKeyPressed) {
-            camera.setPosition(glm::vec3(12.0f, 4.2f, 36.5f));
+            float fireY = terrain.getHeightAt(-22.0f, 25.0f);
+            camera.setPosition(glm::vec3(-18.0f, fireY + 1.6f, 29.0f));
             std::cout << "[Camera Preset] Shoreline & Campfire view." << std::endl;
             g_oneKeyPressed = true;
         }
@@ -123,6 +124,22 @@ void processInput(GLFWwindow* window, float dt) {
         }
     } else {
         g_twoKeyPressed = false;
+    }
+
+    // Ground collision & boundary clamping: prevents camera from plunging underground or beneath the lake/map
+    glm::vec3 camPos = camera.getPosition();
+    camPos.x = std::clamp(camPos.x, -82.0f, 82.0f);
+    camPos.z = std::clamp(camPos.z, -82.0f, 82.0f);
+
+    float groundY = terrain.getHeightAt(camPos.x, camPos.z);
+    float minAllowedY = groundY + 1.35f; // Maintain minimum human eye height above terrain
+    if (minAllowedY < waterLevel + 0.65f) {
+        minAllowedY = waterLevel + 0.65f; // Do not dive underneath the lake water plane
+    }
+
+    if (camPos.y < minAllowedY) {
+        camPos.y = minAllowedY;
+        camera.setPosition(camPos);
     }
 }
 
@@ -239,14 +256,14 @@ int main() {
         return -1;
     }
 
-    // 5. Hierarchical Campfire (Positioned on dry meadow shore, well above water level)
-    float groundY = terrain.getHeightAt(14.0f, 33.0f);
-    campfire.setPosition(glm::vec3(14.0f, groundY + 0.05f, 33.0f));
+    // 5. Hierarchical Campfire (Positioned on meadow shore matching circled location)
+    float campfireGroundY = terrain.getHeightAt(-22.0f, 25.0f);
+    campfire.setPosition(glm::vec3(-22.0f, campfireGroundY + 0.05f, 25.0f));
     campfire.init();
 
-    // 6. Instanced Boreal Pine Forest along Mountain Foothills (TASK-018)
+    // 6. Instanced Boreal Pine Forest along Mountain Foothills (280 realistic conifer trees)
     Forest forest;
-    if (!forest.init(terrain, 220, 33.0f, 75.0f, campfire.getPosition())) {
+    if (!forest.init(terrain, 280, 32.0f, 78.0f, campfire.getPosition())) {
         std::cerr << "Failed to initialize foothill pine forest!" << std::endl;
         return -1;
     }
@@ -277,7 +294,7 @@ int main() {
             fpsTimer = 0.0f;
         }
 
-        processInput(window.getHandle(), deltaTime);
+        processInput(window.getHandle(), deltaTime, terrain, lake.getWaterLevel());
 
         window.clear(0.012f, 0.022f, 0.045f, 1.0f);
 
