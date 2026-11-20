@@ -10,6 +10,7 @@
 #include "Skybox/Skybox.h"
 #include "Aurora/Aurora.h"
 #include "Campfire/Campfire.h"
+#include "Forest/Forest.h"
 #include "Vendor/stb_image_write.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
@@ -20,7 +21,7 @@
 #include <sstream>
 
 // Camera instance overlooking the lake and campfire
-Camera camera(glm::vec3(0.0f, 6.5f, 22.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -8.0f);
+Camera camera(glm::vec3(12.0f, 4.8f, 38.0f), glm::vec3(0.0f, 1.0f, 0.0f), -95.0f, -5.0f);
 
 // Mouse cursor tracking
 float lastX = 1280.0f / 2.0f;
@@ -42,8 +43,8 @@ bool g_lKeyPressed = false;
 bool g_oneKeyPressed = false;
 bool g_twoKeyPressed = false;
 
-// Global Campfire instance
-Campfire campfire(glm::vec3(8.5f, 0.55f, 16.0f));
+// Global Campfire instance (positioned safely on dry meadow shore)
+Campfire campfire(glm::vec3(14.0f, 3.0f, 33.0f));
 
 void processInput(GLFWwindow* window, float dt) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
@@ -102,10 +103,10 @@ void processInput(GLFWwindow* window, float dt) {
         g_lKeyPressed = false;
     }
 
-    // Preset 1: Campfire & Shore View
+    // Preset 1: Campfire & Shore View (On dry meadow shore overlooking lake)
     if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
         if (!g_oneKeyPressed) {
-            camera.setPosition(glm::vec3(6.5f, 2.2f, 19.5f));
+            camera.setPosition(glm::vec3(12.0f, 4.2f, 36.5f));
             std::cout << "[Camera Preset] Shoreline & Campfire view." << std::endl;
             g_oneKeyPressed = true;
         }
@@ -113,10 +114,10 @@ void processInput(GLFWwindow* window, float dt) {
         g_oneKeyPressed = false;
     }
 
-    // Preset 2: Panoramic Mountain & Aurora Aerial View
+    // Preset 2: Panoramic Mountain, Forest & Aurora Aerial View
     if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
         if (!g_twoKeyPressed) {
-            camera.setPosition(glm::vec3(0.0f, 24.0f, 38.0f));
+            camera.setPosition(glm::vec3(0.0f, 26.0f, 48.0f));
             std::cout << "[Camera Preset] Aerial panoramic view." << std::endl;
             g_twoKeyPressed = true;
         }
@@ -231,17 +232,24 @@ int main() {
     terrainShader.setInt("uTexSnow", 2);
     terrainShader.setFloat("uTextureScale", 32.0f);
 
-    // 4. Alpine Lake Surface
-    Lake lake(52.0f, 48.0f, 0.55f, 80, 80);
+    // 4. Expanded Alpine Lake Surface (TASK-007)
+    Lake lake(68.0f, 62.0f, 0.55f, 96, 96);
     if (!lake.init("shaders/water.vert", "shaders/water.frag")) {
         std::cerr << "Failed to initialize lake water surface!" << std::endl;
         return -1;
     }
 
-    // 5. Hierarchical Campfire (Positioned naturally on the meadow shore)
-    float groundY = terrain.getHeightAt(9.0f, 15.0f);
-    campfire.setPosition(glm::vec3(9.0f, groundY + 0.05f, 15.0f));
+    // 5. Hierarchical Campfire (Positioned on dry meadow shore, well above water level)
+    float groundY = terrain.getHeightAt(14.0f, 33.0f);
+    campfire.setPosition(glm::vec3(14.0f, groundY + 0.05f, 33.0f));
     campfire.init();
+
+    // 6. Instanced Boreal Pine Forest along Mountain Foothills (TASK-018)
+    Forest forest;
+    if (!forest.init(terrain, 220, 33.0f, 75.0f, campfire.getPosition())) {
+        std::cerr << "Failed to initialize foothill pine forest!" << std::endl;
+        return -1;
+    }
 
     // Directional Moonlight
     const glm::vec3 lightDir(0.4f, 0.8f, 0.3f);
@@ -308,18 +316,21 @@ int main() {
 
         terrain.draw();
 
-        // 2. Render Starry Skybox
+        // 2. Render Instanced Boreal Pine Forest (TASK-018, Foothills around valley)
+        forest.render(projection, view, lightDir, lightColor, ambientColor, g_moonlightActive, pLight, currentFrame);
+
+        // 3. Render Campfire (Logs, Ring of Stones, Flickering Flame via Hierarchy)
+        campfire.render(projection, view, currentFrame);
+
+        // 4. Render Starry Skybox
         skybox.draw(view, projection);
 
-        // 3. Render Animated Aurora Borealis
+        // 5. Render Animated Aurora Borealis
         aurora.setIntensity(g_auroraIntensity);
         aurora.setSpeed(g_auroraSpeed);
         aurora.draw(view, projection, currentFrame);
 
-        // 4. Render Campfire (Logs, Ring of Stones, Flickering Flame via Hierarchy)
-        campfire.render(projection, view, currentFrame);
-
-        // 5. Render Alpine Lake Surface (Waves, Fresnel, Specular)
+        // 6. Render Alpine Lake Surface (Waves, Fresnel, Specular)
         glm::vec3 activeMoonCol = g_moonlightActive ? lightColor : glm::vec3(0.0f);
         lake.render(projection, view, camera.getPosition(), lightDir, activeMoonCol, ambientColor, currentFrame);
 

@@ -49,6 +49,8 @@ set(SOURCES
     src/Campfire/Campfire.cpp
     src/Campfire/Campfire.h
     src/Campfire/SceneNode.h
+    src/Forest/Forest.cpp
+    src/Forest/Forest.h
     src/Vendor/stb_impl.cpp
     src/Vendor/stb_image.h
     src/Vendor/stb_image_write.h

@@ -27,5 +27,6 @@
 
 ### Phase 4: Polish, Optimization & Reporting
 - [x] TASK-015: Performance profiling and resource cleanup (Both)
+- [x] TASK-018: Instanced boreal pine forest along mountain foothills (Asylbek Agabekuly)
 - [ ] TASK-016: Demonstration video and screenshots for final submission (Both)
 - [ ] TASK-017: Final project report drafting according to university rubric (Both)

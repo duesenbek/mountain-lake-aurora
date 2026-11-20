@@ -13,6 +13,7 @@ SRCS = src/main.cpp \
        src/Skybox/Skybox.cpp \
        src/Aurora/Aurora.cpp \
        src/Campfire/Campfire.cpp \
+       src/Forest/Forest.cpp \
        src/Vendor/stb_impl.cpp
 OBJS = $(SRCS:.cpp=.o)
 TARGET = mountain-lake-aurora

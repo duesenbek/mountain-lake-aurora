@@ -133,21 +133,21 @@ inline float sampleHeight(float u, float v) {
     float ly = ny + lakeWarpY;
     float dist = std::sqrt(lx * lx * 1.15f + ly * ly * 0.90f);
 
-    // Spacious Alpine Valley & Foothills Profile:
-    // dist < 0.22: calm lake basin (water bed)
-    // 0.22 .. 0.46: wide green valley meadows & gentle foothills (lots of greenery!)
-    // 0.46 .. 1.0: majestic alpine mountain peaks rising gracefully on the horizon
+    // Expanded Alpine Valley & Foothills Profile:
+    // dist < 0.30: vast calm alpine lake basin (underwater bed)
+    // 0.30 .. 0.52: wide green valley meadows & gentle foothills (lots of greenery!)
+    // 0.52 .. 1.0: majestic alpine mountain peaks rising gracefully on the horizon
     float valleyMask = 0.0f;
-    if (dist < 0.22f) {
-        valleyMask = 0.01f * (dist / 0.22f);
-    } else if (dist < 0.46f) {
-        float t = (dist - 0.22f) / 0.24f;
+    if (dist < 0.30f) {
+        valleyMask = 0.008f * (dist / 0.30f);
+    } else if (dist < 0.52f) {
+        float t = (dist - 0.30f) / 0.22f;
         float ease = t * t * (3.0f - 2.0f * t);
-        valleyMask = 0.01f + ease * 0.28f;
+        valleyMask = 0.008f + ease * 0.28f;
     } else {
-        float t = (dist - 0.46f) / 0.54f;
+        float t = (dist - 0.52f) / 0.48f;
         t = std::clamp(t, 0.0f, 1.0f);
-        valleyMask = 0.29f + std::pow(t, 1.30f) * 0.71f;
+        valleyMask = 0.288f + std::pow(t, 1.30f) * 0.712f;
     }
 
     // Northern mountains: taller peaks as scenic backdrop for Aurora
@@ -156,9 +156,9 @@ inline float sampleHeight(float u, float v) {
     float height = rawMountain * valleyMask * northBoost;
 
     // Flatten strictly inside the central lake basin to allow clean water plane placement
-    if (dist < 0.20f) {
-        float t = dist / 0.20f;
-        height = std::min(height, 0.005f + 0.015f * (t * t));
+    if (dist < 0.28f) {
+        float t = dist / 0.28f;
+        height = std::min(height, 0.004f + 0.012f * (t * t));
     }
 
     return std::clamp(height, 0.0f, 1.0f);
