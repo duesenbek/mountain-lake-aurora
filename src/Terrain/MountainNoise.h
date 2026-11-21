@@ -161,6 +161,18 @@ inline float sampleHeight(float u, float v) {
         height = std::min(height, 0.004f + 0.012f * (t * t));
     }
 
+    // Scenic Campsite Terrace (around world x = -25.0, z = 22.0 -> u ≈ 0.361, v ≈ 0.622):
+    // Flatten a natural 8-meter circular terrace on the meadow shore so campfire and benches sit perfectly level!
+    float campU = (-25.0f / 180.0f) + 0.5f; // 0.3611
+    float campV = ( 22.0f / 180.0f) + 0.5f; // 0.6222
+    float dCamp = std::hypot((u - campU) * 180.0f, (v - campV) * 180.0f);
+    if (dCamp < 6.5f) {
+        float terraceH = 1.35f / 48.0f; // Exactly y = 1.35m (0.8m above lake level)
+        float t = std::clamp((dCamp - 3.5f) / (6.5f - 3.5f), 0.0f, 1.0f);
+        float blend = 1.0f - t * t * (3.0f - 2.0f * t);
+        height = height * (1.0f - blend) + terraceH * blend;
+    }
+
     return std::clamp(height, 0.0f, 1.0f);
 }
 

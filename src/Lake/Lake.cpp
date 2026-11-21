@@ -37,7 +37,8 @@ void Lake::render(const glm::mat4& projection,
                   const glm::vec3& lightDir,
                   const glm::vec3& lightColor,
                   const glm::vec3& ambientColor,
-                  float time) {
+                  float time,
+                  GLuint heightmapTextureID) {
     if (!m_shader || !m_shader->isValid()) return;
 
     // Enable alpha blending for semi-transparent water surface
@@ -56,12 +57,19 @@ void Lake::render(const glm::mat4& projection,
     m_shader->setMat4("model", model);
 
     m_shader->setFloat("uTime", time);
+    m_shader->setFloat("uWaterLevel", m_waterLevel);
     m_shader->setVec3("uViewPos", viewPos);
     m_shader->setVec3("uLightDir", lightDir);
     m_shader->setVec3("uLightColor", lightColor);
     m_shader->setVec3("uAmbientColor", ambientColor);
     m_shader->setVec3("uDeepColor", m_deepColor);
     m_shader->setVec3("uShallowColor", m_shallowColor);
+
+    if (heightmapTextureID != 0) {
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, heightmapTextureID);
+        m_shader->setInt("uTerrainHeightmap", 3);
+    }
 
     m_mesh.draw();
 

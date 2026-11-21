@@ -40,7 +40,8 @@ public:
                 const glm::vec3& lightDir,
                 const glm::vec3& lightColor,
                 const glm::vec3& ambientColor,
-                float time);
+                float time,
+                GLuint heightmapTextureID = 0);
 
     // Getters and Setters
     float getWaterLevel() const { return m_waterLevel; }

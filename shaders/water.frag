@@ -18,8 +18,11 @@ uniform float uTime;          // Elapsed application time
 uniform vec3 uDeepColor;      // Glacial deep blue (abyss)
 uniform vec3 uShallowColor;   // Clear alpine turquoise (shoreline)
 
+// Terrain Elevation Sampler (for shore contact, shallow foam & smooth shoreline blending)
+uniform sampler2D uTerrainHeightmap; // mountain_valley.png
+uniform float uWaterLevel;           // y = 0.55m
+
 void main() {
-    // Discard any fragments facing away (e.g. from subterranean viewpoints)
     if (!gl_FrontFacing) discard;
 
     vec3 viewDir = normalize(uViewPos - FragPos);
@@ -27,7 +30,6 @@ void main() {
     vec3 halfwayDir = normalize(lightDir + viewDir);
 
     // Multi-directional organic wave gradient normal synthesis
-    // Eliminates artificial grid / checkerboard artifacts by summing non-orthogonal wave vectors
     vec2 p = FragPos.xz * 0.75;
     
     vec2 d1 = vec2(0.951, 0.309);   // ~18 deg
@@ -48,35 +50,55 @@ void main() {
 
     vec3 rippleNormal = normalize(vec3(-grad.x, 1.0, -grad.y));
 
+    // --- Ground & Water Shore Contact (Depth & Wet Sand / Foam Line) ---
+    // Sample terrain bed height below this water fragment
+    vec2 terrainUV = (FragPos.xz / 180.0) + vec2(0.5);
+    float bedHeight = texture(uTerrainHeightmap, terrainUV).r * 48.0;
+    float waterDepth = max(FragPos.y - bedHeight, 0.0);
+
+    // Discard any water parts that are completely underground
+    if (bedHeight > FragPos.y + 0.08) {
+        discard;
+    }
+
     // --- Schlick's Fresnel Reflectance Approximation ---
-    // Water index of refraction n ≈ 1.333 -> F0 ≈ 0.02
     float cosTheta = clamp(dot(rippleNormal, viewDir), 0.0, 1.0);
     float F0 = 0.035;
     float fresnel = F0 + (1.0 - F0) * pow(1.0 - cosTheta, 4.0);
 
     // --- Smooth Blinn-Phong Moonlight Specular Highlight ---
-    // Dual-lobe specular glint: broad sheen + focused glistening crests
     float NdotH = max(dot(rippleNormal, halfwayDir), 0.0);
-    float specFactor = pow(NdotH, 64.0) * 0.8 + pow(NdotH, 160.0) * 1.2;
-    vec3 specular = specFactor * uLightColor * 1.4;
+    float specFactor = pow(NdotH, 64.0) * 0.8 + pow(NdotH, 160.0) * 1.4;
+    vec3 specular = specFactor * uLightColor * 1.5;
 
     // Diffuse / Moonlight illumination
     float diff = max(dot(rippleNormal, lightDir), 0.0);
     vec3 diffuse = diff * uLightColor * 0.25;
 
     // Ambient night sky reflection on water surface
-    vec3 skyReflection = uAmbientColor * 2.2 + uLightColor * 0.20;
+    vec3 skyReflection = uAmbientColor * 2.2 + uLightColor * 0.22;
 
-    // Alpine water body tone (gradual deep glacial abyss tint)
-    vec3 waterBase = mix(uDeepColor, uShallowColor, 0.35 + 0.15 * sin(uTime * 0.3));
+    // Depth-dependent water coloring:
+    // Shallow near shore (depth < 0.6m) -> clear crystalline turquoise
+    // Deep center (depth > 1.8m) -> deep alpine midnight blue
+    float depthFactor = smoothstep(0.05, 1.8, waterDepth);
+    vec3 waterBase = mix(uShallowColor, uDeepColor, depthFactor);
 
     // Combine water body with Fresnel sky reflections
-    vec3 surfaceColor = mix(waterBase, skyReflection, fresnel * 0.70);
+    vec3 surfaceColor = mix(waterBase, skyReflection, fresnel * 0.75);
     vec3 finalColor = surfaceColor + (diffuse * waterBase) + specular;
 
-    // Semi-transparency:
-    // Looking down at water reveals lake bed (alpha ~ 0.80); grazing angles reflect sky (alpha ~ 0.95)
-    float alpha = clamp(mix(0.80, 0.95, fresnel), 0.0, 1.0);
+    // Gentle shoreline foam crest (where water laps against the sand/grass)
+    float shoreFoam = 1.0 - smoothstep(0.0, 0.16, waterDepth);
+    if (shoreFoam > 0.01) {
+        float foamNoise = sin(FragPos.x * 4.0 + uTime * 2.0) * cos(FragPos.z * 4.0 + uTime * 1.5);
+        shoreFoam *= (0.65 + foamNoise * 0.35);
+        vec3 foamColor = vec3(0.65, 0.82, 0.90);
+        finalColor = mix(finalColor, foamColor, shoreFoam * 0.55);
+    }
+
+    // Smooth alpha transparency: transparent at shore, opaque in deep abyss
+    float alpha = clamp(mix(0.65, 0.96, depthFactor + fresnel * 0.3), 0.0, 1.0);
 
     FragColor = vec4(finalColor, alpha);
 }

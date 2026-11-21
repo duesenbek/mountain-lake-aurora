@@ -274,6 +274,7 @@ int main() {
     Texture texValley("assets/textures/grass_valley.png");
     Texture texRock("assets/textures/rock_cliff.png");
     Texture texSnow("assets/textures/snow_peak.png");
+    Texture texHeightmap("assets/heightmaps/mountain_valley.png");
 
     terrainShader.use();
     terrainShader.setInt("uTexValley", 0);
@@ -382,9 +383,9 @@ int main() {
         aurora.setSpeed(g_auroraSpeed);
         aurora.draw(view, projection, currentFrame);
 
-        // 6. Render Alpine Lake Surface (Waves, Fresnel, Specular)
+        // 6. Render Alpine Lake Surface (Waves, Fresnel, Specular, Soft Shoreline Foam & Depth)
         glm::vec3 activeMoonCol = g_moonlightActive ? lightColor : glm::vec3(0.0f);
-        lake.render(projection, view, camera.getPosition(), lightDir, activeMoonCol, ambientColor, currentFrame);
+        lake.render(projection, view, camera.getPosition(), lightDir, activeMoonCol, ambientColor, currentFrame, texHeightmap.getID());
 
         window.swapBuffers();
         window.pollEvents();
