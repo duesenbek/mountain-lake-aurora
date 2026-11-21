@@ -20,6 +20,13 @@ This document records all third-party libraries, textures, models, and reference
   - Repository: https://github.com/nothings/stb
   - License: Public Domain / MIT
 
-## Textures & Heightmaps
-- *To be populated when external textures/skyboxes are integrated.*
-  - Source: CC0 / Public Domain repositories (e.g., Poly Haven, ambientCG).
+## Textures, Heightmaps & Procedural Algorithms
+- **Ken Perlin's Improved Noise & Kent Musgrave's Ridged Multifractal**:
+  - Implemented in `src/Terrain/MountainNoise.h` for procedural alpine mountain terrain heightmap generation.
+- **Procedural Starfield Generation**:
+  - Implemented in `src/Skybox/Skybox.cpp` using 3,500 pseudorandom point-spread stars on a 6-face cubemap.
+- **Procedural Terrain Textures**:
+  - Implemented in `src/Texture/TextureGenerator.h` producing seamless procedural multi-scale cellular textures for valley grass, cliff granite, and snow peak.
+- **stb_image & stb_image_write**:
+  - Author: Sean Barrett (Public Domain / MIT License)
+  - Used for loading textures and writing generated heightmap assets.
