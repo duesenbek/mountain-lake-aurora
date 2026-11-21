@@ -45,8 +45,8 @@ bool g_twoKeyPressed = false;
 bool g_cursorLocked = true;
 bool g_tabKeyPressed = false;
 
-// Global Campfire instance (positioned safely on left meadow slope)
-Campfire campfire(glm::vec3(-22.0f, 1.15f, 25.0f));
+// Global Campfire instance (positioned on scenic dry meadow clearing overlooking the lake)
+Campfire campfire(glm::vec3(-25.0f, 1.45f, 22.0f));
 
 void processInput(GLFWwindow* window, float dt, const Terrain& terrain, float waterLevel) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
@@ -105,11 +105,11 @@ void processInput(GLFWwindow* window, float dt, const Terrain& terrain, float wa
         g_lKeyPressed = false;
     }
 
-    // Preset 1: Campfire & Shore View (On dry meadow shore overlooking lake)
+    // Preset 1: Campfire & Shore View (At cozy campsite with wooden benches overlooking the lake)
     if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
         if (!g_oneKeyPressed) {
-            float fireY = terrain.getHeightAt(-22.0f, 25.0f);
-            camera.setPosition(glm::vec3(-18.0f, fireY + 1.6f, 29.0f));
+            float fireY = terrain.getHeightAt(-25.0f, 22.0f);
+            camera.setPosition(glm::vec3(-21.0f, fireY + 1.6f, 26.5f));
             std::cout << "[Camera Preset] Shoreline & Campfire view." << std::endl;
             g_oneKeyPressed = true;
         }
@@ -288,9 +288,9 @@ int main() {
         return -1;
     }
 
-    // 5. Hierarchical Campfire (Positioned on meadow shore matching circled location)
-    float campfireGroundY = terrain.getHeightAt(-22.0f, 25.0f);
-    campfire.setPosition(glm::vec3(-22.0f, campfireGroundY + 0.05f, 25.0f));
+    // 5. Hierarchical Campfire (Positioned on scenic flat meadow shore with log benches)
+    float campfireGroundY = terrain.getHeightAt(-25.0f, 22.0f);
+    campfire.setPosition(glm::vec3(-25.0f, campfireGroundY + 0.05f, 22.0f));
     campfire.init();
 
     // 6. Instanced Boreal Pine Forest along Mountain Foothills (280 realistic conifer trees)

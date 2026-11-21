@@ -19,6 +19,7 @@ bool Campfire::init() {
     m_logMesh = std::make_shared<Mesh>(Mesh::createCube(1.0f));
     m_stoneMesh = std::make_shared<Mesh>(Mesh::createCube(1.0f));
     m_flameMesh = std::make_shared<Mesh>(Mesh::createCube(1.0f));
+    m_benchMesh = std::make_shared<Mesh>(Mesh::createCube(1.0f));
 
     buildCampfireHierarchy();
     std::cout << "[Campfire] Hierarchical campfire model initialized." << std::endl;
@@ -70,6 +71,34 @@ void Campfire::buildCampfireHierarchy() {
     m_flameNode->setPosition(glm::vec3(0.0f, 0.55f, 0.0f));
     m_flameNode->setScale(glm::vec3(0.55f, 1.1f, 0.55f));
     m_rootNode->addChild(m_flameNode);
+
+    // 5. Child Nodes: Rustic Log Benches / Camp Stools around the fire
+    // Log stool 1 (Lake-facing / south)
+    auto bench1 = std::make_shared<SceneNode>("Bench_South");
+    bench1->setMesh(m_benchMesh);
+    bench1->setPosition(glm::vec3(0.0f, 0.22f, 2.1f));
+    bench1->setRotation(glm::vec3(0.0f, 0.0f, 0.0f));
+    bench1->setScale(glm::vec3(1.6f, 0.32f, 0.45f));
+    bench1->setColor(glm::vec4(0.28f, 0.16f, 0.08f, 1.0f)); // Carved timber wood
+    m_rootNode->addChild(bench1);
+
+    // Log stool 2 (West side)
+    auto bench2 = std::make_shared<SceneNode>("Bench_West");
+    bench2->setMesh(m_benchMesh);
+    bench2->setPosition(glm::vec3(-2.1f, 0.22f, 0.0f));
+    bench2->setRotation(glm::vec3(0.0f, 90.0f, 0.0f));
+    bench2->setScale(glm::vec3(1.6f, 0.32f, 0.45f));
+    bench2->setColor(glm::vec4(0.30f, 0.17f, 0.09f, 1.0f));
+    m_rootNode->addChild(bench2);
+
+    // Log stool 3 (East side)
+    auto bench3 = std::make_shared<SceneNode>("Bench_East");
+    bench3->setMesh(m_benchMesh);
+    bench3->setPosition(glm::vec3(2.1f, 0.22f, 0.0f));
+    bench3->setRotation(glm::vec3(0.0f, 90.0f, 0.0f));
+    bench3->setScale(glm::vec3(1.6f, 0.32f, 0.45f));
+    bench3->setColor(glm::vec4(0.29f, 0.16f, 0.08f, 1.0f));
+    m_rootNode->addChild(bench3);
 }
 
 PointLight Campfire::getLightData(float time) const {

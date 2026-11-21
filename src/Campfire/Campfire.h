@@ -47,6 +47,7 @@ private:
     std::shared_ptr<Mesh> m_logMesh;
     std::shared_ptr<Mesh> m_stoneMesh;
     std::shared_ptr<Mesh> m_flameMesh;
+    std::shared_ptr<Mesh> m_benchMesh;
 
     Shader m_objectShader;
     Shader m_flameShader;

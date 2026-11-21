@@ -255,10 +255,11 @@ bool Forest::init(const Terrain& terrain,
         // Sample terrain height
         float y = terrain.getHeightAt(x, z);
 
-        // Foothill constraints:
-        // Must be on dry ground well above lake level (y > 1.8m)
-        // Must be below high barren rocky peaks (y < 24.0m)
-        if (y < 1.8f || y > 24.0f) continue;
+        // Foothill & Treeline ecological constraints:
+        // Must be on dry ground well above lake water (y > 1.4m)
+        // Natural alpine treeline limit: trees stop growing on high rocky peaks and snowline (y < 9.5m)
+        // High steep rocky cliffs and mountain summits stay completely barren.
+        if (y < 1.4f || y > 9.5f) continue;
 
         float scale = distScale(rng);
         float rotY = distRot(rng);
