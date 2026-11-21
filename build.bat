@@ -24,7 +24,7 @@ echo [ERROR] CMake executable not found!
 exit /b 1
 
 :cmake_found
-echo [1/2] Configuring CMake for Mountain Lake Aurora...
+echo [1/3] Configuring CMake for Mountain Lake Aurora...
 %CMAKE_BIN% -B build -S . -DVCPKG_MANIFEST_MODE=OFF
 if %ERRORLEVEL% NEQ 0 (
     echo [ERROR] CMake configuration failed!
@@ -32,12 +32,17 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 echo.
-echo [2/2] Building Mountain Lake Aurora (Release)...
+echo [2/3] Building Mountain Lake Aurora (Release)...
 %CMAKE_BIN% --build build --config Release
 if %ERRORLEVEL% NEQ 0 (
     echo [ERROR] Build failed!
     exit /b %ERRORLEVEL%
 )
+
+echo.
+echo [3/3] Deploying runtime dynamic libraries (DLLs)...
+if exist "lib\glfw3.dll" copy /Y "lib\glfw3.dll" "build\Release\" >nul
+if exist "lib\glew32.dll" copy /Y "lib\glew32.dll" "build\Release\" >nul
 
 echo.
 echo ========================================================
