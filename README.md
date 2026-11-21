@@ -52,6 +52,7 @@ The project simulates a nighttime nature scene featuring a mountainous terrain s
 | `Left / Right Arrows` | Increase / decrease Aurora wave animation speed |
 | `1` | Camera Preset 1: Shoreline & Campfire view |
 | `2` | Camera Preset 2: Panoramic Mountain Aerial view |
+| `TAB` | Toggle Mouse Cursor (Free mouse for recording / Capture camera) |
 | `ESC` | Exit application |
 
 ## Building and Running

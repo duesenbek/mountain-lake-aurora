@@ -42,6 +42,8 @@ bool g_cKeyPressed = false;
 bool g_lKeyPressed = false;
 bool g_oneKeyPressed = false;
 bool g_twoKeyPressed = false;
+bool g_cursorLocked = true;
+bool g_tabKeyPressed = false;
 
 // Global Campfire instance (positioned safely on left meadow slope)
 Campfire campfire(glm::vec3(-22.0f, 1.15f, 25.0f));
@@ -126,6 +128,32 @@ void processInput(GLFWwindow* window, float dt, const Terrain& terrain, float wa
         g_twoKeyPressed = false;
     }
 
+    // Toggle Mouse Cursor Capture [TAB] (Free cursor to click outside / record screen)
+    if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) {
+        if (!g_tabKeyPressed) {
+            g_cursorLocked = !g_cursorLocked;
+            if (g_cursorLocked) {
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                firstMouse = true;
+                std::cout << "[Cursor] Captured (Camera control ON)" << std::endl;
+            } else {
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                std::cout << "[Cursor] Released (Free mouse for recording / switching windows)" << std::endl;
+            }
+            g_tabKeyPressed = true;
+        }
+    } else {
+        g_tabKeyPressed = false;
+    }
+
+    // Click inside window to re-capture cursor
+    if (!g_cursorLocked && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        g_cursorLocked = true;
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        firstMouse = true;
+        std::cout << "[Cursor] Captured (Clicked inside window)" << std::endl;
+    }
+
     // Ground collision & boundary clamping: prevents camera from plunging underground or beneath the lake/map
     glm::vec3 camPos = camera.getPosition();
     camPos.x = std::clamp(camPos.x, -82.0f, 82.0f);
@@ -144,6 +172,8 @@ void processInput(GLFWwindow* window, float dt, const Terrain& terrain, float wa
 }
 
 void mouseCallback(GLFWwindow* window, double xposIn, double yposIn) {
+    if (!g_cursorLocked) return; // Do not rotate camera while cursor is freed
+
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
 
@@ -163,6 +193,7 @@ void mouseCallback(GLFWwindow* window, double xposIn, double yposIn) {
 }
 
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+    if (!g_cursorLocked) return;
     camera.processMouseScroll(static_cast<float>(yoffset));
 }
 
@@ -214,6 +245,7 @@ int main() {
               << "  [Up/Down Arrows] - Aurora Intensity\n"
               << "  [Left/Right Arrows] - Aurora Animation Speed\n"
               << "  [1 / 2] - Switch Camera View Presets\n"
+              << "  [TAB] - Toggle Cursor Capture (Free mouse / Camera look)\n"
               << "  [ESC] - Exit Application\n"
               << "========================================================\n" << std::endl;
 
@@ -289,6 +321,9 @@ int main() {
                << " | Campfire: " << (campfire.isActive() ? "ON" : "OFF")
                << " | Moon: " << (g_moonlightActive ? "ON" : "OFF")
                << " | Aurora: " << std::setprecision(2) << g_auroraIntensity;
+            if (!g_cursorLocked) {
+                ss << " | [CURSOR UNLOCKED - Press TAB or Click to resume]";
+            }
             glfwSetWindowTitle(window.getHandle(), ss.str().c_str());
             frameCount = 0;
             fpsTimer = 0.0f;
